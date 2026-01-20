@@ -1,12 +1,23 @@
 package dev.zonary123.zutils.utils;
 
 import com.hypixel.hytale.server.core.Message;
+import fi.sulku.hytale.TinyMsg;
 
 import java.awt.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class FormatMessage {
+  public static Message formatMessage(String input) {
+    Message message;
+    try {
+      message = TinyMsg.parse(input);
+    } catch (NoSuchMethodError | NoClassDefFoundError e) {
+      // Fallback for older Hytale versions without TinyMsg
+      message = f(input);
+    }
+    return message;
+  }
 
   private static final Pattern PATTERN = Pattern.compile(
     "<#(?<hex>[A-Fa-f0-9]{6})>|</#>|" +
@@ -15,7 +26,8 @@ public abstract class FormatMessage {
       "[&§](?<legacy>[0-9a-fk-orA-FK-OR])"
   );
 
-  public static Message formatMessage(String input) {
+
+  private static Message f(String input) {
     Message root = Message.empty();
     Message current = root;
 

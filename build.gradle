@@ -39,6 +39,7 @@ dependencies {
 
   // Solo para compilar, Shadow NO lo verá
   compileOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
+  runtimeOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
   compileOnly fileTree(dir: "libs", include: ["*.jar"])
   // Estas SÍ se empaquetarán porque son 'implementation'
   implementation "com.github.ben-manes.caffeine:caffeine:3.2.3"
@@ -46,6 +47,7 @@ dependencies {
   implementation("org.xerial:sqlite-jdbc:3.51.1.0")
   implementation "org.mongodb:mongodb-driver-sync:5.6.2"
   implementation "org.mongodb:bson:5.6.2"
+  implementation("net.objecthunter:exp4j:0.4.8")
 }
 
 // Quiet warnings about missing Javadocs

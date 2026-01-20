@@ -79,7 +79,12 @@ public class AsyncContext {
     };
 
     submitOrFallback(task);
-    return future;
+    return future
+      .orTimeout(30, TimeUnit.SECONDS)
+      .exceptionally(e -> {
+        e.printStackTrace();
+        return null;
+      });
   }
 
   /**
