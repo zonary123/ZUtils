@@ -39,7 +39,7 @@ dependencies {
 
   // Solo para compilar, Shadow NO lo verá
   compileOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
-  runtimeOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
+  //runtimeOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
   compileOnly fileTree(dir: "libs", include: ["*.jar"])
   // Estas SÍ se empaquetarán porque son 'implementation'
   implementation "com.github.ben-manes.caffeine:caffeine:3.2.3"

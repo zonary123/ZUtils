@@ -6,10 +6,7 @@ import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.zonary123.zutils.config.Config;
 import dev.zonary123.zutils.config.Lang;
 import dev.zonary123.zutils.database.blocks.RegionBlockStorage;
-import dev.zonary123.zutils.ecs.BlockBreakSystem;
-import dev.zonary123.zutils.ecs.BlockPlacedEvent;
-import dev.zonary123.zutils.ecs.CraftEvent;
-import dev.zonary123.zutils.ecs.InteractPickUp;
+import dev.zonary123.zutils.ecs.*;
 import dev.zonary123.zutils.utils.async.AsyncContext;
 import dev.zonary123.zutils.utils.async.UtilsAsync;
 import lombok.Getter;
@@ -22,7 +19,7 @@ import java.nio.file.Path;
 @Setter
 public class ZUtils extends JavaPlugin {
   private static ZUtils instance;
-  private Config config = new Config();
+  private Config config;
   private Lang lang = new Lang();
   public static final AsyncContext ASYNC_CONTEXT = UtilsAsync.getContext("ZUtils");
 
@@ -39,8 +36,8 @@ public class ZUtils extends JavaPlugin {
   }
 
   private void files() {
-    config.init();
-    lang.init();
+    config = Config.init();
+    lang = Lang.init();
   }
 
   @Override protected void shutdown() {
@@ -54,6 +51,8 @@ public class ZUtils extends JavaPlugin {
     this.getEntityStoreRegistry().registerSystem(new InteractPickUp());
     this.getEntityStoreRegistry().registerSystem(new CraftEvent());
     this.getEntityStoreRegistry().registerSystem(new BlockPlacedEvent());
+    this.getEntityStoreRegistry().registerSystem(new DamageSystem());
+    this.getEntityStoreRegistry().registerSystem(new KillEntitySystem());
   }
 
 
@@ -66,11 +65,11 @@ public class ZUtils extends JavaPlugin {
   }
 
   public static Config getConfig() {
-    return get().config;
+    return ZUtils.get().config;
   }
 
   public static Lang getLang() {
-    return get().lang;
+    return ZUtils.get().lang;
   }
 
   public static HytaleLogger getLog() {

@@ -15,32 +15,26 @@ public class Config {
   private boolean debug = false;
   private String lang = "en_us";
 
-  public void init() {
-    Path path = ZUtils.getPath();
-    Path file = path.resolve("config.json");
-    Config config = this;
+  public static Config init() {
+    Path file = ZUtils.getPath().resolve("config.json");
+    Config config = new Config();
+
     if (file.toFile().exists()) {
       try {
-        config = UtilsFile.read(file, Config.class);
-        if (config == null) {
-          config = this;
-          ZUtils.getLog().atWarning().log(
-            "Config file was invalid, using default configuration."
-          );
-        }
+        Config loaded = UtilsFile.read(file, Config.class);
+        if (loaded != null) config = loaded;
       } catch (Exception e) {
         e.printStackTrace();
       }
-    } else {
-      ZUtils.getLog().atInfo().log(
-        "Config file not found, creating default configuration."
-      );
     }
+
     try {
       UtilsFile.write(file, config);
-      ZUtils.get().setConfig(config);
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+    return config;
   }
 }
+

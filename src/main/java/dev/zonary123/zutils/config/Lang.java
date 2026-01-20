@@ -26,24 +26,28 @@ public class Lang {
   private String seconds = "&6%s &aseconds ";
   private String second = "&6%s &asecond";
 
-  public void init() {
+  public static Lang init() {
     Path path = ZUtils.getPath();
     Path file = path.resolve("lang").resolve(ZUtils.getConfig().getLang() + ".json");
-    Lang lang = this;
+    Lang lang = new Lang();
     if (file.toFile().exists()) {
       try {
         lang = UtilsFile.read(file, Lang.class);
-        if (lang == null) lang = this;
-        ZUtils.get().setLang(lang);
+        if (lang == null) {
+          ZUtils.getLog().atWarning().log(
+            "Lang file was invalid, using default language."
+          );
+          lang = new Lang();
+        }
       } catch (Exception e) {
         e.printStackTrace();
       }
     }
     try {
       UtilsFile.write(file, lang);
-      ZUtils.get().setLang(lang);
     } catch (Exception e) {
       e.printStackTrace();
     }
+    return lang;
   }
 }

@@ -1,9 +1,6 @@
 package dev.zonary123.zutils.events;
 
-import dev.zonary123.zutils.events.models.Craft;
-import dev.zonary123.zutils.events.models.EventBlockBreak;
-import dev.zonary123.zutils.events.models.EventBlockPlaced;
-import dev.zonary123.zutils.events.models.InteractPickUp;
+import dev.zonary123.zutils.events.models.*;
 
 /**
  *
@@ -14,4 +11,6 @@ public class ZUtilsEvents {
   public static final EventChannel<EventBlockPlaced> BLOCK_PLACED_EVENT = new EventChannel<>();
   public static final EventChannel<InteractPickUp> INTERACT_PICKUP_EVENT = new EventChannel<>();
   public static final EventChannel<Craft> CRAFT_EVENT = new EventChannel<>();
+  public static final EventChannel<Damage> DAMAGE_EVENT = new EventChannel<>();
+  public static final EventChannel<KillEntity> KILL_ENTITY_EVENT = new EventChannel<>();
 }
