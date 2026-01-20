@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathComponent;
 import com.hypixel.hytale.server.core.modules.entity.damage.DeathSystems;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import dev.zonary123.zutils.ZUtils;
@@ -25,7 +26,7 @@ public class KillEntitySystem extends DeathSystems.OnDeathSystem {
   @Nullable
   @Override
   public Query<EntityStore> getQuery() {
-    return Query.any();
+    return Query.or(PlayerRef.getComponentType());
   }
 
   @Override
@@ -51,22 +52,33 @@ public class KillEntitySystem extends DeathSystems.OnDeathSystem {
     if (!(source instanceof Damage.EntitySource entitySource)) return;
     var entityRef = entitySource.getRef();
     Player attackerPlayer = store.getComponent(entityRef, Player.getComponentType());
+    PlayerRef attackerPlayerRef = store.getComponent(entityRef, PlayerRef.getComponentType());
+    if (attackerPlayer == null || attackerPlayerRef == null) {
+      if (ZUtils.getConfig().isDebug()) {
+        ZUtils.getLog().atInfo().log(
+          "NPC Entity %s killed but attacker is not a player",
+          npcEntity.getNPCTypeId()
+        );
+      }
+      return;
+    }
     ZUtils.ASYNC_CONTEXT.runAsync(() -> {
       if (ZUtils.getConfig().isDebug()) {
         ZUtils.getLog().atInfo().log(
           "NPC Entity %s killed by Player %s",
           npcEntity.getNPCTypeId(),
-          attackerPlayer != null ? attackerPlayer.getDisplayName() : "Unknown"
+          attackerPlayerRef.getUsername()
         );
       }
       ZUtilsEvents.KILL_ENTITY_EVENT.emit(
         new dev.zonary123.zutils.events.models.KillEntity(
           attackerPlayer,
-          attackerPlayer.getPlayerRef(),
+          attackerPlayerRef,
           npcEntity,
           npcEntity.getNPCTypeId()
         )
       );
+
       return null;
     });
   }

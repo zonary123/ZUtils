@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import dev.zonary123.zutils.ZUtils;
@@ -32,6 +33,7 @@ public class DamageSystem extends DamageEventSystem {
         return;
       }
       Player attackerPlayer = store.getComponent(attackerRef, Player.getComponentType());
+      PlayerRef attackerPlayerRef = store.getComponent(attackerRef, PlayerRef.getComponentType());
       if (attackerPlayer == null) {
         return;
       }
@@ -63,10 +65,9 @@ public class DamageSystem extends DamageEventSystem {
         ZUtilsEvents.DAMAGE_EVENT.emit(
           new dev.zonary123.zutils.events.models.Damage(
             attackerPlayer,
-            attackerPlayer.getPlayerRef(),
+            attackerPlayerRef,
             npcEntity,
             targetNPCId
-
           )
         );
         return null;
