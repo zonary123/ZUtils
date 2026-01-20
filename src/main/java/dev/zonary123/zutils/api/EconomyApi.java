@@ -1,5 +1,6 @@
 package dev.zonary123.zutils.api;
 
+import dev.zonary123.zutils.ZUtils;
 import dev.zonary123.zutils.models.EconomySelector;
 import dev.zonary123.zutils.utils.economy.Economy;
 import dev.zonary123.zutils.utils.economy.ZEconomyProvider;
@@ -58,8 +59,21 @@ public final class EconomyApi {
     @Nonnull Economy economy
   ) {
     String economyId = economy.getEconomyId();
-    if (ECONOMIES.putIfAbsent(economyId, economy) != null)
-      throw new IllegalStateException("Economy already registered: " + economyId);
+    if (ECONOMIES.putIfAbsent(economyId, economy) != null) {
+      ZUtils.getLog().atWarning().log(
+        "Economy with ID '%s' is already registered.".formatted(economyId)
+      );
+    }
+    try {
+      economy.getBalance(UUID.randomUUID(), "TEST_CURRENCY");
+      ZUtils.getLog().atInfo().log(
+        "Economy '%s' registered successfully.".formatted(economyId)
+      );
+    } catch (NoClassDefFoundError | NoSuchMethodError | Exception e) {
+      ZUtils.getLog().atWarning().log(
+        "Economy '%s' registration test failed: %s".formatted(economyId, e.getMessage())
+      );
+    }
   }
 
   /**
@@ -71,7 +85,13 @@ public final class EconomyApi {
    */
   @Nullable
   public static Economy getEconomy(@Nonnull String economyId) {
-    return ECONOMIES.get(economyId);
+    Economy economy = ECONOMIES.get(economyId);
+    if (economy == null) {
+      ZUtils.getLog().atWarning().log(
+        "Economy with ID '%s' not found. Economies: %s", economy, ECONOMIES.keySet()
+      );
+    }
+    return economy;
   }
 
   /* -------------------------------------------------------------------------- */

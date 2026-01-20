@@ -86,16 +86,14 @@ public class AsyncContext {
    * Executes a Runnable asynchronously and returns a CompletableFuture<Void>
    * for chaining or exception handling.
    *
-   * @param runnable Runnable task
+   * @param supplier Supplier producing a value of type T
    *
    * @return CompletableFuture<Void>
    */
-  public CompletableFuture<Void> runAsync(Runnable runnable) {
-    return supply(() -> {
-      runnable.run();
-      return null;
-    });
+  public <T> CompletableFuture<T> runAsync(Supplier<T> supplier) {
+    return supply(supplier);
   }
+
 
   /**
    * Schedules a Supplier to run after a delay, returning a CompletableFuture.

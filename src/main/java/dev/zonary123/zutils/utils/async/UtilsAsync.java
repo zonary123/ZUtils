@@ -1,7 +1,7 @@
 package dev.zonary123.zutils.utils.async;
 
-import java.util.HashMap;
-import java.util.Map;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 /**
  * UtilsAsync is a centralized manager for per-mod AsyncContexts.
@@ -10,7 +10,8 @@ import java.util.Map;
  */
 public class UtilsAsync {
 
-  private static final Map<String, AsyncContext> contexts = new HashMap<>();
+  private static final Cache<String, AsyncContext> contexts = Caffeine.newBuilder()
+    .build();
 
   /**
    * Creates a new AsyncContext for a mod if it doesn't exist yet.
@@ -21,7 +22,7 @@ public class UtilsAsync {
    * @return The AsyncContext for the mod
    */
   public static AsyncContext createContext(String modId, String threadName) {
-    return contexts.computeIfAbsent(modId, id -> new AsyncContext(threadName));
+    return contexts.get(modId, id -> new AsyncContext(threadName));
   }
 
   /**
@@ -32,7 +33,7 @@ public class UtilsAsync {
    * @return The AsyncContext if it exists, otherwise null
    */
   public static AsyncContext getContext(String modId) {
-    return contexts.get(modId);
+    return contexts.get(modId, id -> new AsyncContext(modId + "-Worker"));
   }
 
   /**
@@ -40,7 +41,7 @@ public class UtilsAsync {
    * Should be called on server shutdown.
    */
   public static void shutdownAll() {
-    contexts.values().forEach(AsyncContext::shutdown);
-    contexts.clear();
+    contexts.asMap().values().forEach(AsyncContext::shutdown);
+    contexts.invalidateAll();
   }
 }
