@@ -24,7 +24,7 @@ public class ItemStackValidator {
 
   public boolean isValid(String itemId) {
     if (itemId == null) return false;
-    return itemIds.isEmpty() || itemIds.contains(itemId) || itemIds.contains("*");
+    return ValidatorUtil.match(itemId, itemIds);
   }
 
   public boolean isValid(ItemStack itemStack) {

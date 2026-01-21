@@ -23,7 +23,7 @@ public class BlockValidator {
 
   public boolean isValid(String blockId) {
     if (blockId == null) return false;
-    return blockId.isEmpty() || blockIds.contains(blockId) || blockIds.contains("*");
+    return ValidatorUtil.match(blockId, blockIds);
   }
 
   public boolean isValid(ItemStack itemStack) {

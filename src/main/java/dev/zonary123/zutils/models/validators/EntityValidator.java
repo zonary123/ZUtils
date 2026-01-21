@@ -22,7 +22,7 @@ public class EntityValidator {
 
   public boolean isValid(String entityId) {
     if (entityId == null) return false;
-    return entityIds.isEmpty() || entityIds.contains(entityId) || entityIds.contains("*");
+    return ValidatorUtil.match(entityId, entityIds);
   }
 
   public boolean isValid(NPCEntity npcEntity) {

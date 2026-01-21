@@ -22,46 +22,65 @@ java {
   withJavadocJar()
 }
 
-// Repositorios
 repositories {
   mavenLocal()
   mavenCentral()
 }
 
-// Dependencias
 dependencies {
+  // --------------------
   // Lombok
+  // --------------------
   compileOnly("org.projectlombok:lombok:1.18.42")
   annotationProcessor("org.projectlombok:lombok:1.18.42")
 
   testCompileOnly("org.projectlombok:lombok:1.18.42")
   testAnnotationProcessor("org.projectlombok:lombok:1.18.42")
 
-  // Solo para compilar, Shadow NO lo verá
+  // --------------------
+  // Hytale API
+  // --------------------
   compileOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
-  //runtimeOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
   compileOnly fileTree(dir: "libs", include: ["*.jar"])
-  // Estas SÍ se empaquetarán porque son 'implementation'
-  implementation "com.github.ben-manes.caffeine:caffeine:3.2.3"
-  implementation "com.zaxxer:HikariCP:2.3.2"
-  implementation("org.xerial:sqlite-jdbc:3.51.1.0")
-  implementation "org.mongodb:mongodb-driver-sync:5.6.2"
-  implementation "org.mongodb:bson:5.6.2"
+
+  // --------------------
+  // SLF4J (PROVIDED BY HYTALE)
+  // --------------------
+  compileOnly("org.slf4j:slf4j-api:1.7.36")
+
+  // --------------------
+  // Runtime libraries (WITHOUT SLF4J)
+  // --------------------
+  implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
+
+  implementation("com.zaxxer:HikariCP:2.3.2") {
+    exclude group: "org.slf4j", module: "slf4j-api"
+  }
+
+  implementation("org.xerial:sqlite-jdbc:3.51.1.0") {
+    exclude group: "org.slf4j", module: "slf4j-api"
+  }
+
+  implementation("org.mongodb:mongodb-driver-sync:5.6.2") {
+    exclude group: "org.slf4j", module: "slf4j-api"
+  }
+
+  implementation("org.mongodb:bson:5.6.2") {
+    exclude group: "org.slf4j", module: "slf4j-api"
+  }
+
   implementation("net.objecthunter:exp4j:0.4.8")
 }
 
-// Quiet warnings about missing Javadocs
-tasks.javadoc {
-  options.addStringOption('Xdoclint:-missing', '-quiet')
-}
-
-// UTF-8 y compilación Java 21
 tasks.withType(JavaCompile).configureEach {
   options.encoding = 'UTF-8'
   options.release.set(21)
 }
 
-// Procesar recursos y actualizar manifest.json
+tasks.javadoc {
+  options.addStringOption('Xdoclint:-missing', '-quiet')
+}
+
 tasks.register('updatePluginManifest') {
   def manifestFile = file('src/main/resources/manifest.json')
   doLast {
@@ -70,7 +89,9 @@ tasks.register('updatePluginManifest') {
     }
     def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
     manifestJson.Version = project.version
-    manifestFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(manifestJson))
+    manifestFile.text = groovy.json.JsonOutput.prettyPrint(
+      groovy.json.JsonOutput.toJson(manifestJson)
+    )
   }
 }
 
@@ -79,37 +100,33 @@ tasks.named('processResources') {
   filteringCharset = 'UTF-8'
 }
 
-// ShadowJar para empaquetar el plugin
 tasks.shadowJar {
   archiveBaseName.set(rootProject.name)
   archiveClassifier.set("")
 
-  // Esta es la clave: le decimos a Shadow que SU fuente de archivos
-  // sea exclusivamente la configuración 'runtimeClasspath'.
-  // En Gradle, 'compileOnly' NO forma parte de 'runtimeClasspath'.
   configurations = [project.configurations.runtimeClasspath]
 
-  // Relocations
+  // --------------------
+  // Relocations (SAFE)
+  // --------------------
   relocate("com.mongodb", "dev.zonary123.libs.mongodb")
   relocate("org.bson", "dev.zonary123.libs.bson")
 
-
-  // Opcional: un filtro de seguridad extra por si acaso
+  // --------------------
+  // CRITICAL: NEVER SHADE SLF4J
+  // --------------------
+  exclude "org/slf4j/**"
   exclude "META-INF/maven/**"
 }
 
-
-// Ejecutar tests con JUnit 5
 tasks.test {
   useJUnitPlatform()
 }
 
-// ShadowJar como dependencia del build
 tasks.build {
   dependsOn tasks.shadowJar
 }
 
-// Crear run configuration en IDEA para Hytale
 def serverRunDir = file("$projectDir/run")
 if (!serverRunDir.exists()) serverRunDir.mkdirs()
 
@@ -117,10 +134,12 @@ idea.project.settings.runConfigurations {
   'HytaleServer'(org.jetbrains.gradle.ext.Application) {
     mainClass = 'com.hypixel.hytale.Main'
     moduleName = project.idea.module.name + '.main'
-    programParameters = "--allow-op --assets=$hytaleHome/install/$patchline/package/game/latest/Assets.zip"
+    programParameters =
+      "--allow-op --assets=$hytaleHome/install/$patchline/package/game/latest/Assets.zip"
 
     if (findProperty("includes_pack")?.toBoolean()) {
-      programParameters += " --mods=${sourceSets.main.java.srcDirs.first().parentFile.absolutePath}"
+      programParameters +=
+        " --mods=${sourceSets.main.java.srcDirs.first().parentFile.absolutePath}"
     }
 
     if (findProperty("load_user_mods")?.toBoolean()) {
