@@ -13,7 +13,8 @@
     "Website": "https://your-plugin-website.com",
     "ServerVersion": "*",
     "Dependencies": {
-        
+        "Hytale:Universe": "*",
+        "Hytale:NPC": "*"
     },
     "OptionalDependencies": {
         

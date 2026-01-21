@@ -111,6 +111,6 @@ public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockE
   }
 
   @Override public Query<EntityStore> getQuery() {
-    return Query.any();
+    return PlayerRef.getComponentType();
   }
 }
