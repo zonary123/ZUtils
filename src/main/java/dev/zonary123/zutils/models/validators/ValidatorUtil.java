@@ -24,7 +24,7 @@ public class ValidatorUtil {
     matched |= values.isEmpty() || values.contains("*") || values.contains(value);
     if (matched) {
       if (ZUtils.getConfig().isDebug()) {
-        ZUtils.getLog().atInfo().log(s
+        ZUtils.getLog().atInfo().log(
           "ValidatorUtil.match: value='%s' matched directly", value
         );
       }
