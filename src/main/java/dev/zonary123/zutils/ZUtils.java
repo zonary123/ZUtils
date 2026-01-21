@@ -6,6 +6,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import dev.zonary123.zutils.commands.ZUtilsCommand;
 import dev.zonary123.zutils.config.Config;
 import dev.zonary123.zutils.config.Lang;
 import dev.zonary123.zutils.database.blocks.RegionBlockStorage;
@@ -39,6 +40,7 @@ public class ZUtils extends JavaPlugin {
     files();
     events();
     RegionBlockStorage.init(getPath());
+    this.getCommandRegistry().registerCommand(new ZUtilsCommand());
   }
 
   private void files() {
