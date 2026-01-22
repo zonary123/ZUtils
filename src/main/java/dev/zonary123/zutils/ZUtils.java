@@ -2,11 +2,11 @@ package dev.zonary123.zutils;
 
 import com.hypixel.hytale.builtin.adventure.objectives.events.TreasureChestOpeningEvent;
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import dev.zonary123.zutils.commands.ZUtilsCommand;
 import dev.zonary123.zutils.config.Config;
 import dev.zonary123.zutils.config.Lang;
 import dev.zonary123.zutils.database.blocks.RegionBlockStorage;
@@ -40,6 +40,7 @@ public class ZUtils extends JavaPlugin {
     files();
     events();
     RegionBlockStorage.init(getPath());
+    this.getCommandRegistry().registerCommand(new ZUtilsCommand());
   }
 
   private void files() {
@@ -60,6 +61,7 @@ public class ZUtils extends JavaPlugin {
     this.getEntityStoreRegistry().registerSystem(new BlockPlacedEvent());
     this.getEntityStoreRegistry().registerSystem(new DamageSystem());
     this.getEntityStoreRegistry().registerSystem(new KillEntitySystem());
+    this.getEntityStoreRegistry().registerSystem(new UseBlockPickUp());
     this.getEventRegistry().registerGlobal(PlayerChatEvent.class, evt -> {
         var playerRef = evt.getSender();
         var message = evt.getContent();
@@ -70,9 +72,9 @@ public class ZUtils extends JavaPlugin {
           ));
           if (message.startsWith("/")) {
             ZUtilsEvents.COMMAND_EVENT.emit(new Command(
-                playerRef,
-                message
-              ));
+              playerRef,
+              message
+            ));
           }
           return null;
         });
@@ -83,15 +85,14 @@ public class ZUtils extends JavaPlugin {
       var store = evt.getStore();
       var player = store.getComponent(ref, PlayerRef.getComponentType());
       if (player == null) return;
-      if (ZUtils.getConfig().isDebug()){
-         ZUtils.getLog().atInfo().log(
-            "Player %s opened a treasure chest at %s",
-           player.getUsername(),
-            evt.getChestUUID()
-         );
+      if (ZUtils.getConfig().isDebug()) {
+        ZUtils.getLog().atInfo().log(
+          "Player %s opened a treasure chest at %s",
+          player.getUsername(),
+          evt.getChestUUID()
+        );
       }
     });
-
 
 
   }

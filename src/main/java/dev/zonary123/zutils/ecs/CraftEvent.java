@@ -60,6 +60,6 @@ public final class CraftEvent
   }
 
   @Override public Query<EntityStore> getQuery() {
-    return Query.any();
+    return PlayerRef.getComponentType();
   }
 }

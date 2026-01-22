@@ -23,11 +23,12 @@ import java.util.UUID;
  */
 public class DamageSystem extends DamageEventSystem {
   public void handle(int index, ArchetypeChunk<EntityStore> archetypeChunk, Store<EntityStore> store, CommandBuffer<EntityStore> commandBuffer, Damage damage) {
+    if (damage.getAmount() <= 0) return;
     var targetRef = archetypeChunk.getReferenceTo(index);
     if (!targetRef.isValid()) return;
+
     Damage.Source source = damage.getSource();
-    if (source instanceof Damage.EntitySource) {
-      Damage.EntitySource entitySource = (Damage.EntitySource) source;
+    if (source instanceof Damage.EntitySource entitySource) {
       var attackerRef = entitySource.getRef();
       if (!attackerRef.isValid()) {
         return;
@@ -47,7 +48,9 @@ public class DamageSystem extends DamageEventSystem {
         return;
       }
       UUID targetUuid = targetUuidComponent.getUuid();
-      NPCEntity npcEntity = store.getComponent(targetRef, NPCEntity.getComponentType());
+      var component = NPCEntity.getComponentType();
+      if (component == null) return;
+      NPCEntity npcEntity = store.getComponent(targetRef, component);
       if (npcEntity == null) return;
       String targetNPCId = npcEntity.getNPCTypeId();
       if (ZUtils.getConfig().isDebug()) {
@@ -67,7 +70,8 @@ public class DamageSystem extends DamageEventSystem {
             attackerPlayer,
             attackerPlayerRef,
             npcEntity,
-            targetNPCId
+            targetNPCId,
+            damage
           )
         );
         return null;
@@ -78,6 +82,6 @@ public class DamageSystem extends DamageEventSystem {
   @Nullable
   @Override
   public Query<EntityStore> getQuery() {
-    return Query.any();
+    return NPCEntity.getComponentType();
   }
 }

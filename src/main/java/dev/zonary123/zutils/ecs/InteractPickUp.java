@@ -50,6 +50,6 @@ public class InteractPickUp extends EntityEventSystem<EntityStore, Interactively
 
   @Override
   public Query<EntityStore> getQuery() {
-    return Query.any();
+    return PlayerRef.getComponentType();
   }
 }

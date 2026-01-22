@@ -23,12 +23,6 @@ import org.jspecify.annotations.Nullable;
 public class KillEntitySystem extends DeathSystems.OnDeathSystem {
 
 
-  @Nullable
-  @Override
-  public Query<EntityStore> getQuery() {
-    return Query.or(PlayerRef.getComponentType());
-  }
-
   @Override
   public void onComponentAdded(
     @NonNull Ref<EntityStore> ref,
@@ -36,6 +30,8 @@ public class KillEntitySystem extends DeathSystems.OnDeathSystem {
     @NonNull Store<EntityStore> store,
     @NonNull CommandBuffer<EntityStore> commandBuffer
   ) {
+    var component = NPCEntity.getComponentType();
+    if (component == null) return;
     NPCEntity npcEntity = store.getComponent(ref, NPCEntity.getComponentType());
     if (npcEntity == null) return;
     var deathInfo = deathComponent.getDeathInfo();
@@ -82,4 +78,11 @@ public class KillEntitySystem extends DeathSystems.OnDeathSystem {
       return null;
     });
   }
+
+  @Nullable
+  @Override
+  public Query<EntityStore> getQuery() {
+    return NPCEntity.getComponentType();
+  }
+
 }

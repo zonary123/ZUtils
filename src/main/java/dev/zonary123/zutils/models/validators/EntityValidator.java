@@ -4,6 +4,7 @@ import com.hypixel.hytale.server.npc.entities.NPCEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -20,13 +21,11 @@ public class EntityValidator {
     Set.of("*")
   );
 
-  public boolean isValid(String entityId) {
-    if (entityId == null) return false;
-    return entityIds.isEmpty() || entityIds.contains(entityId) || entityIds.contains("*");
+  public boolean isValid(@NonNull String entityId) {
+    return ValidatorUtil.match(entityId, entityIds);
   }
 
-  public boolean isValid(NPCEntity npcEntity) {
-    if (npcEntity == null) return false;
+  public boolean isValid(@NonNull NPCEntity npcEntity) {
     return isValid(npcEntity.getNPCTypeId());
   }
 

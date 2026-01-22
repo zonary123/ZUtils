@@ -21,6 +21,7 @@ import org.jspecify.annotations.NonNull;
 public final class BlockBreakSystem extends EntityEventSystem<EntityStore, BreakBlockEvent> {
 
   public BlockBreakSystem() {
+
     super(BreakBlockEvent.class);
   }
 
@@ -115,6 +116,6 @@ public final class BlockBreakSystem extends EntityEventSystem<EntityStore, Break
 
   @Override
   public Query<EntityStore> getQuery() {
-    return Query.any();
+    return PlayerRef.getComponentType();
   }
 }

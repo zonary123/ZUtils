@@ -5,6 +5,7 @@ import com.hypixel.hytale.server.core.inventory.ItemStack;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.NonNull;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -17,22 +18,22 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class BlockValidator {
+  
   private Set<String> blockIds = new HashSet<>(
     Set.of("*")
   );
 
-  public boolean isValid(String blockId) {
+  public boolean isValid(@NonNull String blockId) {
+    return ValidatorUtil.match(blockId, blockIds);
+  }
+
+  public boolean isValid(@NonNull ItemStack itemStack) {
+    String blockId = itemStack.getBlockKey();
     if (blockId == null) return false;
-    return blockId.isEmpty() || blockIds.contains(blockId) || blockIds.contains("*");
+    return isValid(blockId);
   }
 
-  public boolean isValid(ItemStack itemStack) {
-    if (itemStack == null) return false;
-    return isValid(itemStack.getBlockKey());
-  }
-
-  public boolean isValid(BlockType blockType) {
-    if (blockType == null) return false;
+  public boolean isValid(@NonNull BlockType blockType) {
     return isValid(blockType.getId());
   }
 }
