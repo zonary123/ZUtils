@@ -5,8 +5,8 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
-import com.hypixel.hytale.server.core.modules.entitystats.EntityStatMap;
-import com.hypixel.hytale.server.core.modules.entitystats.asset.DefaultEntityStatTypes;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.modules.entity.tracker.NetworkId;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -31,37 +31,31 @@ public class TestCommand extends AbstractPlayerCommand {
     @NonNull PlayerRef playerRef,
     @NonNull World world
   ) {
-    EntityStatMap stats = store.getComponent(ref, EntityStatMap.getComponentType());
-    if (stats == null) {
-      context.sendMessage(
-        Message.raw(
-          "You don't have any stats."
-        )
-      );
-      return;
-    }
-    context.sendMessage(
-      Message.raw(
-        "Your stats are: " + stats.toString()
-      )
-    );
+    world.execute(() -> {
+      Player player = store.getComponent(ref, Player.getComponentType());
+      if (player == null) {
+        context.sendMessage(
+          Message.raw(
+            "Player component not found."
+          )
+        );
+        return;
+      }
 
-    int healthIdx = DefaultEntityStatTypes.getHealth();
-    var value = stats.get(healthIdx);
-    if (value == null) {
+      NetworkId id = store.getComponent(ref, NetworkId.getComponentType());
+      if (id == null) {
+        context.sendMessage(
+          Message.raw(
+            "NetworkId component not found."
+          )
+        );
+        return;
+      }
       context.sendMessage(
         Message.raw(
-          "You don't have a health stat."
+          "EntityId: " + id.getId()
         )
       );
-      return;
-    }
-    float missing = value.getMax() - value.get();
-    context.sendMessage(
-      Message.raw(
-        "Your missing health is: " + missing
-      )
-    );
-    stats.addStatValue(healthIdx, missing);
+    });
   }
 }

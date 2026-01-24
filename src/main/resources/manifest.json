@@ -14,7 +14,10 @@
     "ServerVersion": "*",
     "Dependencies": {
         "Hytale:Universe": "*",
-        "Hytale:NPC": "*"
+        "Hytale:NPC": "*",
+        "Hytale:Path": "*",
+        "Hytale:Crafting": "*",
+        "Hytale:BlockStateModule": "*"
     },
     "OptionalDependencies": {
         
