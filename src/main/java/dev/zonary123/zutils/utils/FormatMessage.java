@@ -4,20 +4,24 @@ import com.hypixel.hytale.server.core.Message;
 import fi.sulku.hytale.TinyMsg;
 
 import java.awt.*;
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class FormatMessage {
+
   public static Message formatMessage(String input) {
-    Message message;
     try {
-      message = TinyMsg.parse(input);
-    } catch (NoSuchMethodError | NoClassDefFoundError e) {
-      // Fallback for older Hytale versions without TinyMsg
-      message = f(input);
+      return TinyMsg.parse(input);
+    } catch (NoSuchMethodError | NoClassDefFoundError | Exception ignored) {
+      return parseLegacy(input);
     }
-    return message;
   }
+
+  // --------------------------------------------------
+  // Regex
+  // --------------------------------------------------
 
   private static final Pattern PATTERN = Pattern.compile(
     "<#(?<hex>[A-Fa-f0-9]{6})>|</#>|" +
@@ -26,127 +30,119 @@ public abstract class FormatMessage {
       "[&§](?<legacy>[0-9a-fk-orA-FK-OR])"
   );
 
+  // --------------------------------------------------
+  // Parser
+  // --------------------------------------------------
 
-  private static Message f(String input) {
+  private static Message parseLegacy(String input) {
     Message root = Message.empty();
-    Message current = root;
+    Deque<Message> stack = new ArrayDeque<>();
+    stack.push(root);
 
-    Color gradientFrom = null;
-    Color gradientTo = null;
+    FormatState state = new FormatState();
 
     Matcher matcher = PATTERN.matcher(input);
-    int lastIndex = 0;
+    int last = 0;
 
     while (matcher.find()) {
 
-      // Texto plano
-      if (matcher.start() > lastIndex) {
-        appendText(
-          current,
-          input.substring(lastIndex, matcher.start()),
-          gradientFrom,
-          gradientTo
-        );
+      if (matcher.start() > last) {
+        appendText(stack.peek(), input.substring(last, matcher.start()), state);
       }
 
-      // <#HEX>
       if (matcher.group("hex") != null) {
-        current = Message.empty().color("#" + matcher.group("hex"));
-        root.insert(current);
+        Message colored = Message.empty().color("#" + matcher.group("hex"));
+        stack.peek().insert(colored);
+        stack.push(colored);
+        state.color = "#" + matcher.group("hex");
+      } else if (matcher.group(0).equals("</#>")) {
+        if (stack.size() > 1) stack.pop();
+      } else if (matcher.group("g1") != null) {
+        state.gradientFrom = Color.decode("#" + matcher.group("g1"));
+        state.gradientTo = Color.decode("#" + matcher.group("g2"));
+      } else if (matcher.group(0).equals("</gradient>")) {
+        state.gradientFrom = null;
+        state.gradientTo = null;
+      } else if (matcher.group("lang") != null) {
+        stack.peek().insert(Message.translation(matcher.group("lang")));
+      } else if (matcher.group("legacy") != null) {
+        applyLegacy(state, matcher.group("legacy").charAt(0));
       }
 
-      // </#>
-      else if (matcher.group(0).equals("</#>")) {
-        current = root;
-      }
-
-      // <gradient:#A:#B>
-      else if (matcher.group("g1") != null) {
-        gradientFrom = Color.decode("#" + matcher.group("g1"));
-        gradientTo = Color.decode("#" + matcher.group("g2"));
-      }
-
-      // </gradient>
-      else if (matcher.group(0).equals("</gradient>")) {
-        gradientFrom = null;
-        gradientTo = null;
-      }
-
-      // <lang:key>
-      else if (matcher.group("lang") != null) {
-        current.insert(Message.translation(matcher.group("lang")));
-      }
-
-      // & / § legacy
-      else if (matcher.group("legacy") != null) {
-        applyLegacy(current, matcher.group("legacy").charAt(0));
-      }
-
-      lastIndex = matcher.end();
+      last = matcher.end();
     }
 
-    // Texto restante
-    if (lastIndex < input.length()) {
-      appendText(
-        current,
-        input.substring(lastIndex),
-        gradientFrom,
-        gradientTo
-      );
+    if (last < input.length()) {
+      appendText(stack.peek(), input.substring(last), state);
     }
 
     return root;
   }
 
-  // -----------------------
-  // Helpers
-  // -----------------------
+  // --------------------------------------------------
+  // Text handling
+  // --------------------------------------------------
 
-  private static void appendText(Message parent, String text, Color from, Color to) {
+  private static void appendText(Message parent, String text, FormatState state) {
     if (text.isEmpty()) return;
 
-    if (from == null) {
-      parent.insert(Message.raw(text));
+    if (!state.hasGradient()) {
+      parent.insert(applyState(Message.raw(text), state));
       return;
     }
 
     int len = text.length();
     for (int i = 0; i < len; i++) {
-      float ratio = len == 1 ? 0f : (float) i / (len - 1);
-      Color c = interpolate(from, to, ratio);
+      float t = len == 1 ? 0f : (float) i / (len - 1);
+      Color c = interpolate(state.gradientFrom, state.gradientTo, t);
 
-      Message m = Message.empty()
-        .color(String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue()));
+      Message m = Message.raw(String.valueOf(text.charAt(i)))
+        .color(toHex(c));
 
-      m.insert(Message.raw(String.valueOf(text.charAt(i))));
-      parent.insert(m);
+      parent.insert(applyState(m, state));
     }
   }
 
-  private static Color interpolate(Color from, Color to, float ratio) {
-    int r = (int) (from.getRed() + (to.getRed() - from.getRed()) * ratio);
-    int g = (int) (from.getGreen() + (to.getGreen() - from.getGreen()) * ratio);
-    int b = (int) (from.getBlue() + (to.getBlue() - from.getBlue()) * ratio);
-    return new Color(r, g, b);
+  private static Message applyState(Message msg, FormatState state) {
+    if (state.color != null) msg.color(state.color);
+    msg.bold(state.bold);
+    msg.italic(state.italic);
+    return msg;
   }
 
-  private static void applyLegacy(Message msg, char c) {
-    char code = Character.toLowerCase(c);
+  // --------------------------------------------------
+  // Legacy codes
+  // --------------------------------------------------
 
-    switch (code) {
-      case 'l', 'b' -> msg.bold(true);
-      case 'o' -> msg.italic(true);
-      case 'r' -> {
-        msg.bold(false);
-        msg.italic(false);
-        msg.color("#FFFFFF");
-      }
-      default -> msg.color(getColorFromCode(code));
+  private static void applyLegacy(FormatState state, char c) {
+    switch (Character.toLowerCase(c)) {
+      case 'l' -> state.bold = true;
+      case 'o' -> state.italic = true;
+      case 'n' -> state.underline = true;
+      case 'k' -> state.obfuscated = true;
+      case 'r' -> state.reset();
+      default -> state.color = getColorFromCode(c);
     }
+  }
+
+  // --------------------------------------------------
+  // Utils
+  // --------------------------------------------------
+
+  private static Color interpolate(Color a, Color b, float t) {
+    return new Color(
+      (int) (a.getRed() + (b.getRed() - a.getRed()) * t),
+      (int) (a.getGreen() + (b.getGreen() - a.getGreen()) * t),
+      (int) (a.getBlue() + (b.getBlue() - a.getBlue()) * t)
+    );
+  }
+
+  private static String toHex(Color c) {
+    return String.format("#%02X%02X%02X", c.getRed(), c.getGreen(), c.getBlue());
   }
 
   private static String getColorFromCode(char code) {
-    return switch (code) {
+    return switch (Character.toLowerCase(code)) {
       case '0' -> "#000000";
       case '1' -> "#0000AA";
       case '2' -> "#00AA00";
@@ -165,5 +161,25 @@ public abstract class FormatMessage {
       case 'f' -> "#FFFFFF";
       default -> "#FFFFFF";
     };
+  }
+
+  // --------------------------------------------------
+  // State
+  // --------------------------------------------------
+
+  private static class FormatState {
+    String color;
+    boolean bold, italic, underline, obfuscated;
+    Color gradientFrom, gradientTo;
+
+    boolean hasGradient() {
+      return gradientFrom != null && gradientTo != null;
+    }
+
+    void reset() {
+      color = null;
+      bold = italic = underline = obfuscated = false;
+      gradientFrom = gradientTo = null;
+    }
   }
 }
