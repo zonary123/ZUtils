@@ -67,56 +67,6 @@ public class ZUtils extends JavaPlugin {
     this.getEntityStoreRegistry().registerSystem(new KillEntitySystem());
     this.getEntityStoreRegistry().registerSystem(new UseBlockPickUp());
     this.getEntityStoreRegistry().registerSystem(new UseBlockECS());
-    this.getEventRegistry().registerGlobal(PlayerMouseButtonEvent.class, evt -> {
-      Player player = evt.getPlayer();
-      World world = player.getWorld();
-      if (world == null) {
-        if (ZUtils.getConfig().isDebug()) {
-          ZUtils.getLog().atWarning().log(
-            "PlayerMouseMotionEvent: Player %s is not in a world when moving mouse",
-            player.getDisplayName()
-          );
-        }
-        return;
-      }
-      world.execute(() -> {
-        var ref = evt.getPlayerRef();
-        var store = ref.getStore();
-        PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
-        if (playerRef == null) {
-          if (ZUtils.getConfig().isDebug()) {
-            ZUtils.getLog().atWarning().log(
-              "PlayerMouseMotionEvent: No PlayerRef found for entity %s when moving mouse",
-              ref
-            );
-          }
-          return;
-        }
-        ItemStack itemInHand = player.getInventory().getItemInHand();
-        var mouseMotion = evt.getMouseButton();
-        if (ZUtils.getConfig().isDebug()) {
-          ZUtils.getLog().atInfo().log(
-            "Player %s moved mouse with item %s in hand. button=%s",
-            playerRef.getUsername(),
-            itemInHand != null ? itemInHand.getItemId() : "null",
-            mouseMotion.mouseButtonType
-          );
-        }
-      });
-    });
-    this.getEventRegistry().registerGlobal(TreasureChestOpeningEvent.class, evt -> {
-      var ref = evt.getPlayerRef();
-      var store = evt.getStore();
-      var player = store.getComponent(ref, PlayerRef.getComponentType());
-      if (player == null) return;
-      if (ZUtils.getConfig().isDebug()) {
-        ZUtils.getLog().atInfo().log(
-          "Player %s opened a treasure chest at %s",
-          player.getUsername(),
-          evt.getChestUUID()
-        );
-      }
-    });
   }
 
 
