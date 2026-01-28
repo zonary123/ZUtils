@@ -1,7 +1,10 @@
 package dev.zonary123.zutils.utils.async;
 
+import lombok.Data;
+
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 /**
@@ -33,6 +36,7 @@ import java.util.function.Supplier;
  *       .thenAccept(msg -> System.out.println(msg));
  * </pre>
  */
+@Data
 public class AsyncContext {
   private final ExecutorService executor;
   private final ScheduledExecutorService scheduler;
@@ -44,18 +48,26 @@ public class AsyncContext {
    * @param threadName Base name for the threads. Threads will be named:
    *                   {threadName}-Worker and {threadName}-Scheduler
    */
-  public AsyncContext(String threadName) {
-    this.executor = Executors.newSingleThreadExecutor(r -> {
-      Thread t = new Thread(r, threadName + "-Worker");
-      t.setDaemon(true); // Daemon so JVM can exit if only these threads remain
-      return t;
-    });
+  public AsyncContext(String threadName, int minThreads, int maxThreads) {
+    AtomicInteger counter = new AtomicInteger();
 
-    this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
-      Thread t = new Thread(r, threadName + "-Scheduler");
+    ThreadFactory factory = r -> {
+      Thread t = new Thread(r);
+      t.setName(threadName + "-" + counter.incrementAndGet());
       t.setDaemon(true);
       return t;
-    });
+    };
+
+    this.executor = new ThreadPoolExecutor(
+      minThreads,
+      maxThreads,
+      60L,
+      TimeUnit.SECONDS,
+      new LinkedBlockingQueue<>(),
+      factory
+    );
+
+    this.scheduler = Executors.newSingleThreadScheduledExecutor(factory);
   }
 
   /**
