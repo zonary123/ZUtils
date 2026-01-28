@@ -1,6 +1,6 @@
 package dev.zonary123.zutils.utils.economy;
 
-import dev.zonary123.zeconomy.api.ZEconomyApi;
+import com.economy.api.EconomyAPI;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -9,14 +9,18 @@ import java.util.UUID;
  *
  * @author Carlos Varas Alonso - 18/01/2026 7:29
  */
-public class ZEconomyProvider extends Economy {
+public class EconomySystemProvider extends Economy {
   /**
    * Constructor for ZEconomyProvider.
    *
    * @param economyId ID of the economy
    */
-  public ZEconomyProvider(String economyId) {
+  public EconomySystemProvider(String economyId) {
     super(economyId);
+  }
+
+  private EconomyAPI get() {
+    return EconomyAPI.getInstance();
   }
 
   /**
@@ -28,7 +32,7 @@ public class ZEconomyProvider extends Economy {
    */
   @Override
   public BigDecimal getBalance(UUID playerId, String currencyId) {
-    return ZEconomyApi.getBalance(playerId, currencyId);
+    return BigDecimal.valueOf(get().getBalance(playerId));
   }
 
   /**
@@ -42,7 +46,8 @@ public class ZEconomyProvider extends Economy {
    */
   @Override
   public boolean setBalance(UUID playerId, String currencyId, BigDecimal amount, String reason) {
-    return ZEconomyApi.setBalance(playerId, currencyId, amount, reason);
+    get().setBalance(playerId, amount.doubleValue());
+    return true;
   }
 
   /**
@@ -56,7 +61,8 @@ public class ZEconomyProvider extends Economy {
    */
   @Override
   public boolean deposit(UUID playerId, String currencyId, BigDecimal amount, String reason) {
-    return ZEconomyApi.deposit(playerId, currencyId, amount, reason);
+    get().addBalance(playerId, amount.doubleValue());
+    return true;
   }
 
   /**
@@ -70,7 +76,7 @@ public class ZEconomyProvider extends Economy {
    */
   @Override
   public boolean withdraw(UUID playerId, String currencyId, BigDecimal amount, String reason) {
-    return ZEconomyApi.withdraw(playerId, currencyId, amount, reason);
+    return get().removeBalance(playerId, amount.doubleValue());
   }
 
   /**
@@ -83,19 +89,12 @@ public class ZEconomyProvider extends Economy {
    */
   @Override
   public boolean hasBalance(UUID playerId, String currencyId, BigDecimal amount) {
-    return ZEconomyApi.getBalance(playerId, currencyId).compareTo(amount) >= 0;
+    return get().hasBalance(playerId, amount.doubleValue());
   }
 
-  /**
-   * Format a currency amount for a specific currency.
-   *
-   * @param currencyId ID of the currency
-   * @param amount     Amount to format
-   * @return Formatted currency string
-   */
   @Override
   public String formatCurrency(String currencyId, BigDecimal amount) {
-    return ZEconomyApi.getCurrency(currencyId).getFormat(amount);
+    return String.format("%s %.2f", currencyId, amount);
   }
 
   /**
@@ -110,6 +109,10 @@ public class ZEconomyProvider extends Economy {
    */
   @Override
   public boolean transfer(UUID fromPlayerId, UUID toPlayerId, String currencyId, BigDecimal amount, String reason) {
+    if (withdraw(fromPlayerId, currencyId, amount, reason)) {
+      deposit(toPlayerId, currencyId, amount, reason);
+      return true;
+    }
     return false;
   }
 }

@@ -30,7 +30,6 @@ public abstract class Economy {
    *
    * @param playerId   UUID of the player
    * @param currencyId ID of the currency
-   *
    * @return the balance of the player in the specified currency
    */
   public abstract BigDecimal getBalance(UUID playerId, String currencyId);
@@ -42,7 +41,6 @@ public abstract class Economy {
    * @param currencyId ID of the currency
    * @param amount     Amount to set
    * @param reason     Reason for setting the balance
-   *
    * @return true if the balance was set successfully, false otherwise
    */
   public abstract boolean setBalance(UUID playerId, String currencyId, BigDecimal amount, String reason);
@@ -54,7 +52,6 @@ public abstract class Economy {
    * @param currencyId ID of the currency
    * @param amount     Amount to deposit
    * @param reason     Reason for the deposit
-   *
    * @return true if the deposit was successful, false otherwise
    */
   public abstract boolean deposit(UUID playerId, String currencyId, BigDecimal amount, String reason);
@@ -66,7 +63,6 @@ public abstract class Economy {
    * @param currencyId ID of the currency
    * @param amount     Amount to withdraw
    * @param reason     Reason for the withdrawal
-   *
    * @return true if the withdrawal was successful, false otherwise
    */
   public abstract boolean withdraw(UUID playerId, String currencyId, BigDecimal amount, String reason);
@@ -77,10 +73,18 @@ public abstract class Economy {
    * @param playerId   UUID of the player
    * @param currencyId ID of the currency
    * @param amount     Amount to check
-   *
    * @return true if the player has at least the specified amount, false otherwise
    */
   public abstract boolean hasBalance(UUID playerId, String currencyId, BigDecimal amount);
+
+  /**
+   * Format a currency amount for display.
+   *
+   * @param currencyId ID of the currency
+   * @param amount     Amount to format
+   * @return formatted currency string
+   */
+  public abstract String formatCurrency(String currencyId, BigDecimal amount);
 
   /**
    * Transfer an amount from one player to another for a specific currency.
@@ -90,7 +94,6 @@ public abstract class Economy {
    * @param currencyId   ID of the currency
    * @param amount       Amount to transfer
    * @param reason       Reason for the transfer
-   *
    * @return true if the transfer was successful, false otherwise
    */
   public abstract boolean transfer(

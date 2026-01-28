@@ -2,7 +2,9 @@ package dev.zonary123.zutils.api;
 
 import dev.zonary123.zutils.ZUtils;
 import dev.zonary123.zutils.models.EconomySelector;
+import dev.zonary123.zutils.utils.economy.EcoTaleEconomyProvider;
 import dev.zonary123.zutils.utils.economy.Economy;
+import dev.zonary123.zutils.utils.economy.EconomySystemProvider;
 import dev.zonary123.zutils.utils.economy.ZEconomyProvider;
 
 import javax.annotation.Nonnull;
@@ -35,9 +37,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class EconomyApi {
   private static final Map<String, Economy> ECONOMIES = new ConcurrentHashMap<>();
+  private static Economy DEFAULT_ECONOMY;
 
+  /**
+   * Static initializer to register built-in economy providers.
+   */
   static {
     registerEconomy(new ZEconomyProvider("ZEconomy"));
+    registerEconomy(new EcoTaleEconomyProvider("EcoTale"));
+    registerEconomy(new EconomySystemProvider("EconomySystem"));
   }
 
   private EconomyApi() {
@@ -52,7 +60,6 @@ public final class EconomyApi {
    * Registers a new economy provider.
    *
    * @param economy economy implementation
-   *
    * @throws IllegalStateException if an economy with the same ID is already registered
    */
   public static void registerEconomy(
@@ -73,6 +80,7 @@ public final class EconomyApi {
       ZUtils.getLog().atWarning().log(
         "Economy '%s' registration test failed: %s".formatted(economyId, e.getMessage())
       );
+      ECONOMIES.remove(economyId);
     }
   }
 
@@ -80,20 +88,31 @@ public final class EconomyApi {
    * Retrieves a registered economy provider.
    *
    * @param economyId economy identifier
-   *
    * @return the economy provider, or {@code null} if not found
    */
   @Nullable
   public static Economy getEconomy(@Nonnull String economyId) {
+    if (ECONOMIES.size() == 1) return ECONOMIES.values().iterator().next();
     Economy economy = ECONOMIES.get(economyId);
     if (economy == null) {
-      ZUtils.getLog().atWarning().log(
-        "Economy with ID '%s' not found. Economies: %s", economy, ECONOMIES.keySet()
-      );
+      if (ZUtils.getConfig().isDebug()) {
+        ZUtils.getLog().atWarning().log(
+          "Economy with ID '%s' not found. Using default economy.".formatted(economyId)
+        );
+      }
+      economy = ECONOMIES.values().iterator().next();
     }
     return economy;
   }
 
+  /**
+   * Retrieves all registered economy providers.
+   *
+   * @return map of economy ID to economy provider
+   */
+  public static Map<String, Economy> getEconomies() {
+    return ECONOMIES;
+  }
   /* -------------------------------------------------------------------------- */
   /* Balance                                                                     */
   /* -------------------------------------------------------------------------- */
@@ -104,9 +123,7 @@ public final class EconomyApi {
    * @param playerId   player UUID
    * @param economyId  economy identifier
    * @param currencyId currency identifier
-   *
    * @return current player balance
-   *
    * @throws IllegalArgumentException if the economy does not exist
    */
   @Nonnull
@@ -123,9 +140,7 @@ public final class EconomyApi {
    *
    * @param playerId player UUID
    * @param selector economy and currency selector
-   *
    * @return current player balance
-   *
    * @throws IllegalArgumentException if the economy does not exist
    */
   @Nonnull
@@ -148,7 +163,6 @@ public final class EconomyApi {
    * @param currencyId currency identifier
    * @param amount     new balance amount
    * @param reason     transaction reason
-   *
    * @return {@code true} if the balance was set successfully
    */
   public static boolean setBalance(
@@ -168,7 +182,6 @@ public final class EconomyApi {
    * @param selector economy and currency selector
    * @param amount   new balance amount
    * @param reason   transaction reason
-   *
    * @return {@code true} if the balance was set successfully
    */
   public static boolean setBalance(
@@ -193,7 +206,6 @@ public final class EconomyApi {
    * @param currencyId currency identifier
    * @param amount     amount to deposit (must be positive)
    * @param reason     transaction reason
-   *
    * @return {@code true} if the deposit was successful
    */
   public static boolean deposit(
@@ -213,7 +225,6 @@ public final class EconomyApi {
    * @param selector economy and currency selector
    * @param amount   amount to deposit (must be positive)
    * @param reason   transaction reason
-   *
    * @return {@code true} if the deposit was successful
    */
   public static boolean deposit(
@@ -238,7 +249,6 @@ public final class EconomyApi {
    * @param currencyId currency identifier
    * @param amount     amount to withdraw (must be positive)
    * @param reason     transaction reason
-   *
    * @return {@code true} if the withdrawal was successful
    */
   public static boolean withdraw(
@@ -258,7 +268,6 @@ public final class EconomyApi {
    * @param selector economy and currency selector
    * @param amount   amount to withdraw (must be positive)
    * @param reason   transaction reason
-   *
    * @return {@code true} if the withdrawal was successful
    */
   public static boolean withdraw(
@@ -282,7 +291,6 @@ public final class EconomyApi {
    * @param economyId  economy identifier
    * @param currencyId currency identifier
    * @param amount     minimum amount
-   *
    * @return {@code true} if the player has enough balance
    */
   public static boolean hasBalance(
@@ -300,7 +308,6 @@ public final class EconomyApi {
    * @param playerId player UUID
    * @param selector economy and currency selector
    * @param amount   minimum amount
-   *
    * @return {@code true} if the player has enough balance
    */
   public static boolean hasBalance(
@@ -320,15 +327,15 @@ public final class EconomyApi {
    * Resolves an economy from a selector.
    *
    * @param selector economy selector
-   *
    * @return resolved economy
-   *
    * @throws IllegalArgumentException if the economy does not exist
    */
   @Nonnull
   private static Economy resolveEconomy(@Nonnull EconomySelector selector) {
-    Economy economy = ECONOMIES.get(selector.getEconomy());
+    Economy economy = getEconomy(selector.getEconomy());
     if (economy == null) throw new IllegalArgumentException("Economy not found: " + selector.getEconomy());
     return economy;
   }
+
+
 }

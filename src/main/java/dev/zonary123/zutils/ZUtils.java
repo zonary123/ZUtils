@@ -35,7 +35,8 @@ public class ZUtils extends JavaPlugin {
     instance = this;
   }
 
-  @Override protected void setup() {
+  @Override
+  protected void setup() {
     try {
       super.setup();
       files();
@@ -52,7 +53,8 @@ public class ZUtils extends JavaPlugin {
     lang = Lang.init();
   }
 
-  @Override protected void shutdown() {
+  @Override
+  protected void shutdown() {
     super.shutdown();
     UtilsAsync.shutdownAll();
     RegionBlockStorage.shutdown();
@@ -67,6 +69,7 @@ public class ZUtils extends JavaPlugin {
     this.getEntityStoreRegistry().registerSystem(new KillEntitySystem());
     this.getEntityStoreRegistry().registerSystem(new UseBlockPickUp());
     this.getEntityStoreRegistry().registerSystem(new UseBlockECS());
+    this.getEntityStoreRegistry().registerSystem(new PlayerThrowItem());
     this.getEventRegistry().registerGlobal(PlayerMouseButtonEvent.class, evt -> {
       Player player = evt.getPlayer();
       World world = player.getWorld();

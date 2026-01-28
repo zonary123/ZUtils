@@ -2,6 +2,8 @@ package dev.zonary123.zutils.commands;
 
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import dev.zonary123.zutils.commands.admin.EconomyCommand;
+import dev.zonary123.zutils.commands.admin.TestCommand;
 import org.jspecify.annotations.NonNull;
 
 /**
@@ -12,6 +14,7 @@ public class ZUtilsCommand extends CommandBase {
   public ZUtilsCommand() {
     super("zutils", "description");
     this.addSubCommand(new TestCommand());
+    this.addSubCommand(new EconomyCommand());
   }
 
   @Override protected void executeSync(@NonNull CommandContext commandContext) {

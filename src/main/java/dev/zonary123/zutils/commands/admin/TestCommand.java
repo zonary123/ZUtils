@@ -1,4 +1,4 @@
-package dev.zonary123.zutils.commands;
+package dev.zonary123.zutils.commands.admin;
 
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
