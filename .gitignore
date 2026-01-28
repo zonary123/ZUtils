@@ -8,6 +8,8 @@ build/
 ### Hytale ###
 run/
 libs/HytaleServer.jar
+libs/EconomySystem*.jar
+libs/Ecotale*.jar
 
 ### IntelliJ IDEA ###
 .idea/
