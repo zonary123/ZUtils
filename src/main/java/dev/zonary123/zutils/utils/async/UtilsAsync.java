@@ -34,11 +34,15 @@ public class UtilsAsync {
    * Retrieves an existing AsyncContext for a mod.
    *
    * @param modId Unique identifier for the mod
-   *
    * @return The AsyncContext if it exists, otherwise null
    */
   public static AsyncContext getContext(String modId) {
-    return contexts.getIfPresent(modId);
+    AsyncContext context = contexts.getIfPresent(modId);
+    if (context == null) {
+      context = createContext(modId, modId + "-async");
+      contexts.put(modId, context);
+    }
+    return context;
   }
 
   /**

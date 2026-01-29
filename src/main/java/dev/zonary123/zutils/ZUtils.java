@@ -1,19 +1,16 @@
 package dev.zonary123.zutils;
 
-import com.hypixel.hytale.builtin.adventure.objectives.events.TreasureChestOpeningEvent;
 import com.hypixel.hytale.logger.HytaleLogger;
-import com.hypixel.hytale.server.core.entity.entities.Player;
-import com.hypixel.hytale.server.core.event.events.player.PlayerMouseButtonEvent;
-import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
-import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.world.World;
+import dev.zonary123.zutils.adapters.AtomicReferenceAdapter;
 import dev.zonary123.zutils.commands.ZUtilsCommand;
 import dev.zonary123.zutils.config.Config;
 import dev.zonary123.zutils.config.Lang;
 import dev.zonary123.zutils.database.blocks.RegionBlockStorage;
 import dev.zonary123.zutils.ecs.*;
+import dev.zonary123.zutils.models.DurationValue;
+import dev.zonary123.zutils.utils.UtilsFile;
 import dev.zonary123.zutils.utils.async.AsyncContext;
 import dev.zonary123.zutils.utils.async.UtilsAsync;
 import lombok.Getter;
@@ -21,6 +18,7 @@ import lombok.Setter;
 import org.jspecify.annotations.NonNull;
 
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Getter
 @Setter
@@ -35,13 +33,16 @@ public class ZUtils extends JavaPlugin {
     instance = this;
   }
 
-  @Override protected void setup() {
+  @Override
+  protected void setup() {
     try {
       super.setup();
       files();
       events();
       RegionBlockStorage.init(getPath());
       this.getCommandRegistry().registerCommand(new ZUtilsCommand());
+      UtilsFile.registerAdapter(AtomicReference.class, AtomicReferenceAdapter.INSTANCE);
+      UtilsFile.registerAdapter(DurationValue.class, DurationValue.INSTANCE);
     } catch (Exception e) {
       getLogger().atSevere().withCause(e).log("Error during ZUtils setup");
     }
@@ -66,8 +67,8 @@ public class ZUtils extends JavaPlugin {
     this.getEntityStoreRegistry().registerSystem(new BlockPlacedEvent());
     this.getEntityStoreRegistry().registerSystem(new DamageSystem());
     this.getEntityStoreRegistry().registerSystem(new KillEntitySystem());
-    this.getEntityStoreRegistry().registerSystem(new UseBlockPickUp());
     this.getEntityStoreRegistry().registerSystem(new UseBlockECS());
+    this.getEntityStoreRegistry().registerSystem(new TravelSystem());
   }
 
 

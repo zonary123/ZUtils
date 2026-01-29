@@ -1,16 +1,15 @@
 package dev.zonary123.zutils.models.rewards;
 
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.universe.world.World;
 import dev.zonary123.zutils.ZUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,14 +54,35 @@ public class AdvancedRewards {
           giveDisconnectedRewards(playerUuid);
           return;
         }
-
-        int amount = getAmountForPlayer(playerUuid);
-
-        if (giveAll) {
-          giveAllRewards(data, playerUuid);
-        } else {
-          giveWeightedRewards(data, playerUuid, amount);
+        var playerRef = data.getPlayerRef();
+        var ref = playerRef.getReference();
+        if (ref == null) {
+          giveDisconnectedRewards(playerUuid);
+          return;
         }
+
+        UUID worldUuid = playerRef.getWorldUuid();
+        if (worldUuid == null) {
+          giveDisconnectedRewards(playerUuid);
+          return;
+        }
+        World world = Universe.get().getWorld(worldUuid);
+        if (world == null) {
+          giveDisconnectedRewards(playerUuid);
+          return;
+        }
+        world.execute(() -> {
+          var store = ref.getStore();
+          Player player = store.getComponent(ref, Player.getComponentType());
+          data.setPlayer(player);
+          int amount = getAmountForPlayer(playerUuid);
+
+          if (giveAll) {
+            giveAllRewards(data, playerUuid);
+          } else {
+            giveWeightedRewards(data, playerUuid, amount);
+          }
+        });
       });
   }
 
@@ -113,10 +133,11 @@ public class AdvancedRewards {
 
   @Data
   public static class DataPlayer {
-    public final Player player;
+    @Nullable
+    public Player player;
     public final PlayerRef playerRef;
 
-    public DataPlayer(Player player, PlayerRef playerRef) {
+    public DataPlayer(@Nullable Player player, PlayerRef playerRef) {
       this.player = player;
       this.playerRef = playerRef;
     }
@@ -125,13 +146,7 @@ public class AdvancedRewards {
   private DataPlayer getOnlinePlayer(UUID uuid) {
     PlayerRef playerRef = Universe.get().getPlayer(uuid);
     if (playerRef == null) return null;
-
-    Ref<EntityStore> ref = playerRef.getReference();
-    if (ref == null) return null;
-
-    Store<EntityStore> store = ref.getStore();
-    Player player = store.getComponent(ref, Player.getComponentType());
-    return new DataPlayer(player, playerRef);
+    return new DataPlayer(null, playerRef);
   }
 
   private int getAmountForPlayer(UUID playerUuid) {

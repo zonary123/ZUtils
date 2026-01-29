@@ -37,7 +37,7 @@ dependencies {
   // --------------------
   // Hytale API
   // --------------------
-  implementation(files("libs/HytaleServer.jar"))
+  compileOnly files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
   compileOnly(fileTree(dir: "libs", include: ["*.jar"]))
 
   // --------------------

@@ -1,10 +1,13 @@
 package dev.zonary123.zutils.models.rewards;
 
+import com.hypixel.hytale.protocol.packets.interface_.NotificationStyle;
 import com.hypixel.hytale.server.core.HytaleServer;
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.util.NotificationUtil;
 import dev.zonary123.zutils.api.EconomyApi;
 import dev.zonary123.zutils.utils.economy.Economy;
 import lombok.Data;
@@ -54,7 +57,7 @@ public class Reward {
    */
   public void giveReward(AdvancedRewards.DataPlayer data, UUID playerUuid) {
     switch (getRewardType()) {
-      case "item" -> giveItemReward(data.getPlayer());
+      case "item" -> giveItemReward(data);
       case "money" -> giveMoneyReward(playerUuid);
       case "command" -> giveCommandReward(data);
       default -> throw new UnsupportedOperationException("Unsupported reward type: " + getRewardType());
@@ -68,10 +71,9 @@ public class Reward {
    * Format: item:<amount>-<amount>:<itemId>
    *
    * @param player Player to give the reward to.
-   *
    * @see ItemStack
    */
-  public void giveItemReward(Player player) {
+  public void giveItemReward(AdvancedRewards.DataPlayer data) {
     String[] parts = reward.split(":");
     String amountStr = parts[1];
     String itemId = parts[2];
@@ -85,7 +87,19 @@ public class Reward {
       amount = Integer.parseInt(amountStr);
     }
     ItemStack itemStack = new ItemStack(itemId, amount);
+    Player player = data.getPlayer();
+    if (player == null) {
+      giveDisconnectedReward(data.getPlayerRef().getUuid());
+      return;
+    }
     player.getInventory().getCombinedEverything().addItemStack(itemStack);
+    NotificationUtil.sendNotification(
+      data.getPlayerRef().getPacketHandler(),
+      Message.empty(),
+      Message.empty(),
+      itemStack.toPacket(),
+      NotificationStyle.Default
+    );
   }
 
   /**

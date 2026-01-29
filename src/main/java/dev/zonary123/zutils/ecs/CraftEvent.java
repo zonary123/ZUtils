@@ -1,6 +1,5 @@
 package dev.zonary123.zutils.ecs;
 
-import com.hypixel.hytale.component.Archetype;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
@@ -22,8 +21,9 @@ public final class CraftEvent extends EntityEventSystem<EntityStore, CraftRecipe
   }
 
 
-  @Override public Query<EntityStore> getQuery() {
-    return Archetype.empty();
+  @Override
+  public Query<EntityStore> getQuery() {
+    return PlayerRef.getComponentType();
   }
 
   @Override
@@ -55,6 +55,7 @@ public final class CraftEvent extends EntityEventSystem<EntityStore, CraftRecipe
       return;
     }
     ZUtils.ASYNC_CONTEXT.runAsync(() -> {
+
       if (ZUtils.getConfig().isDebug()) {
         ZUtils.getLog().atInfo().log(
           "Player %s crafted item %s x%d using recipe %s",

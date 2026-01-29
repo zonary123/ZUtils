@@ -12,7 +12,7 @@ public class AtomicReferenceAdapter implements JsonSerializer<AtomicReference<?>
   public static final AtomicReferenceAdapter INSTANCE = new AtomicReferenceAdapter();
 
   static {
-    UtilsFile.registerAdapter(AtomicReference.class, INSTANCE);
+    UtilsFile.registerAdapter(AtomicReference.class, AtomicReferenceAdapter.INSTANCE);
   }
 
   @Override

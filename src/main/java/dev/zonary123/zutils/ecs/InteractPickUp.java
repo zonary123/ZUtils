@@ -31,6 +31,19 @@ public class InteractPickUp extends EntityEventSystem<EntityStore, Interactively
     if (playerRef == null || player == null) return;
     var itemStack = evt.getItemStack();
     ZUtils.ASYNC_CONTEXT.runAsync(() -> {
+      Integer placed = BlockPlacedEvent.BLOCK_PLACE.get(playerRef.getUuid()).getOrDefault(itemStack.getItem(), 0);
+      if (placed != null && placed > 0) {
+        if (ZUtils.getConfig().isDebug()) {
+          ZUtils.getLog().atInfo().log(
+            "Player %s picked up item %s x%d (ignored due to recent placement)",
+            playerRef.getUsername(),
+            itemStack.getItemId(),
+            itemStack.getQuantity()
+          );
+        }
+        BlockPlacedEvent.BLOCK_PLACE.get(playerRef.getUuid()).merge(itemStack.getItem(), -1, Integer::sum);
+        return null;
+      }
       if (ZUtils.getConfig().isDebug()) {
         ZUtils.getLog().atInfo().log(
           "Player %s picked up item %s x%d",

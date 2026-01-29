@@ -18,6 +18,10 @@ import dev.zonary123.zutils.events.ZUtilsEvents;
 import dev.zonary123.zutils.events.models.EventBlockBreak;
 import org.jspecify.annotations.NonNull;
 
+import java.util.concurrent.ConcurrentHashMap;
+
+import static dev.zonary123.zutils.ecs.BlockPlacedEvent.BLOCK_PLACE;
+
 public final class BlockBreakSystem extends EntityEventSystem<EntityStore, BreakBlockEvent> {
 
   public BlockBreakSystem() {
@@ -86,6 +90,14 @@ public final class BlockBreakSystem extends EntityEventSystem<EntityStore, Break
       }
 
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
+        BLOCK_PLACE.computeIfAbsent(
+          playerRef.getUuid(),
+          k -> new ConcurrentHashMap<>()
+        ).merge(
+          block.getItem(),
+          -1,
+          Integer::sum
+        );
         boolean placed = RegionBlockStorage.isPlaced(world, worldChunk, pos);
         RegionBlockStorage.removePlaced(world, worldChunk, pos);
         if (ZUtils.getConfig().isDebug()) {

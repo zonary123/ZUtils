@@ -6,6 +6,7 @@ import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.EntityEventSystem;
 import com.hypixel.hytale.math.util.ChunkUtil;
+import com.hypixel.hytale.server.core.asset.type.item.config.Item;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.ecs.PlaceBlockEvent;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
@@ -19,11 +20,17 @@ import dev.zonary123.zutils.events.ZUtilsEvents;
 import dev.zonary123.zutils.events.models.EventBlockPlaced;
 import org.jspecify.annotations.NonNull;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  *
  * @author Carlos Varas Alonso - 20/01/2026 9:24
  */
 public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockEvent> {
+  public static final Map<UUID, Map<Item, Integer>> BLOCK_PLACE = new ConcurrentHashMap<>();
+
   public BlockPlacedEvent() {
     super(PlaceBlockEvent.class);
   }
@@ -83,6 +90,14 @@ public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockE
         return;
       }
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
+        BLOCK_PLACE.computeIfAbsent(
+          playerRef.getUuid(),
+          k -> new ConcurrentHashMap<>()
+        ).merge(
+          itemStack.getItem(),
+          1,
+          Integer::sum
+        );
         boolean placed = RegionBlockStorage.isPlaced(world, worldChunk, pos);
         RegionBlockStorage.markPlaced(world, worldChunk, pos);
         if (ZUtils.getConfig().isDebug()) {
@@ -110,7 +125,8 @@ public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockE
     });
   }
 
-  @Override public Query<EntityStore> getQuery() {
+  @Override
+  public Query<EntityStore> getQuery() {
     return PlayerRef.getComponentType();
   }
 }
