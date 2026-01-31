@@ -42,53 +42,20 @@ public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockE
     var player = store.getComponent(ref, Player.getComponentType());
     var playerRef = store.getComponent(ref, PlayerRef.getComponentType());
     var pos = evt.getTargetBlock();
-    if (player == null || playerRef == null) {
-      ZUtils.getLog().atWarning().log(
-        "A block place event was triggered by an entity without a Player or PlayerRef component"
-      );
-      return;
-    }
+    if (player == null || playerRef == null) return;
+
     World world = player.getWorld();
-    if (world == null) {
-      ZUtils.getLog().atWarning().log(
-        "Player %s placed a block at %s in a null world",
-        playerRef.getUsername(),
-        pos
-      );
-      return;
-    }
+    if (world == null) return;
+
     ItemStack itemStack = evt.getItemInHand();
-    if (itemStack == null) {
-      ZUtils.getLog().atWarning().log(
-        "Player %s placed a block at %s in world %s, but the item in hand is null",
-        playerRef.getUsername(),
-        pos,
-        world.getName()
-      );
-      return;
-    }
+    if (itemStack == null) return;
 
     var blockId = itemStack.getBlockKey();
-    if (blockId == null || blockId.equals("Empty")) {
-      ZUtils.getLog().atWarning().log(
-        "Player %s placed a block at %s in world %s, but the block ID is null",
-        playerRef.getUsername(),
-        pos,
-        world.getName()
-      );
-      return;
-    }
+    if (blockId == null || blockId.equals("Empty")) return;
+
     world.execute(() -> {
       WorldChunk worldChunk = world.getChunkIfInMemory(ChunkUtil.indexChunkFromBlock(pos.getX(), pos.getZ()));
-      if (worldChunk == null) {
-        ZUtils.getLog().atWarning().log(
-          "Player %s placed a block at %s in world %s, but the chunk is null",
-          playerRef.getUsername(),
-          pos,
-          world.getName()
-        );
-        return;
-      }
+      if (worldChunk == null) return;
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
         BLOCK_PLACE.computeIfAbsent(
           playerRef.getUuid(),
@@ -100,16 +67,8 @@ public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockE
         );
         boolean placed = RegionBlockStorage.isPlaced(world, worldChunk, pos);
         RegionBlockStorage.markPlaced(world, worldChunk, pos);
-        if (ZUtils.getConfig().isDebug()) {
-          ZUtils.getLog().atInfo().log(
-            "Player %s placed block at %s in world %s. Already placed: %s",
-            playerRef.getUsername(),
-            pos,
-            world.getName(),
-            placed
-          );
-        }
 
+        if (ZUtilsEvents.BLOCK_PLACED_EVENT.isEmpty()) return null;
         var event = new EventBlockPlaced(
           player,
           playerRef,

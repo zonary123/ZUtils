@@ -3,6 +3,8 @@ package dev.zonary123.zutils.utils;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.hypixel.hytale.server.core.HytaleServer;
+import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import dev.zonary123.zutils.ZUtils;
@@ -22,7 +24,6 @@ public class PlayerUtils {
    * @param cooldowns       The cooldowns to check.
    * @param defaultCooldown The default cooldown.
    * @param player          The player to check.
-   *
    * @return The cooldown.
    */
   public static int getCooldown(Map<String, Integer> cooldowns, int defaultCooldown, PlayerRef player) {
@@ -63,7 +64,6 @@ public class PlayerUtils {
    * Method to get the cooldown in a human-readable format.
    *
    * @param timestamp The timestamp to check.
-   *
    * @return The cooldown in a human-readable format.
    */
   public static String getCooldown(long timestamp) {
@@ -99,7 +99,6 @@ public class PlayerUtils {
    * Method to check if a cooldown is active.
    *
    * @param cooldown The cooldown to check.
-   *
    * @return true if the cooldown is active.
    */
   public static boolean isCooldown(Date cooldown) {
@@ -111,7 +110,6 @@ public class PlayerUtils {
    * Method to check if a cooldown is active.
    *
    * @param cooldown The cooldown to check.
-   *
    * @return true if the cooldown is active.
    */
   public static boolean isCooldown(Long cooldown) {
@@ -119,5 +117,38 @@ public class PlayerUtils {
     return isCooldown(new Date(cooldown));
   }
 
+  /**
+   * Method to execute a command.
+   *
+   * @param command   The command to execute.
+   * @param playerRef The player reference to execute the command as.
+   */
+  public static void executeCommand(String command, PlayerRef playerRef) {
+    if (command.startsWith("console:")) executeCommandAsConsole(command.replaceFirst("console:", ""), playerRef);
+    else if (command.startsWith("player:")) executeCommandAsPlayer(command.replaceFirst("player:", ""), playerRef);
+    else executeCommandAsConsole(command, playerRef);
+  }
+
+  /**
+   * Method to execute a command as console.
+   *
+   * @param command   The command to execute.
+   * @param playerRef The player reference to replace %player% placeholder.
+   */
+  public static void executeCommandAsConsole(String command, PlayerRef playerRef) {
+    var commandManager = HytaleServer.get().getCommandManager();
+    commandManager.handleCommand(ConsoleSender.INSTANCE, command.replace("%player%", playerRef.getUsername()));
+  }
+
+  /**
+   * Method to execute a command as player.
+   *
+   * @param command   The command to execute.
+   * @param playerRef The player reference to execute the command as.
+   */
+  public static void executeCommandAsPlayer(String command, PlayerRef playerRef) {
+    var commandManager = HytaleServer.get().getCommandManager();
+    commandManager.handleCommand(playerRef, command.replace("%player%", playerRef.getUsername()));
+  }
 
 }

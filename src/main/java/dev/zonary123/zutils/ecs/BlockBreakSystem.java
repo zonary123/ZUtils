@@ -41,53 +41,20 @@ public final class BlockBreakSystem extends EntityEventSystem<EntityStore, Break
     var player = store.getComponent(ref, Player.getComponentType());
     var playerRef = store.getComponent(ref, PlayerRef.getComponentType());
     var pos = evt.getTargetBlock();
-    if (player == null || playerRef == null) {
-      if (ZUtils.getConfig().isDebug()) {
-        ZUtils.getLog().atWarning().log(
-          "BlockBreakSystem: Player or PlayerRef is null for entity %s",
-          ref
-        );
-      }
-      return;
-    }
+    if (player == null || playerRef == null) return;
 
     var block = evt.getBlockType();
     var blockId = block.getId();
 
-    if (blockId == null || blockId.equals("Empty")) {
-      if (ZUtils.getConfig().isDebug()) {
-        ZUtils.getLog().atWarning().log(
-          "BlockBreakSystem: Block ID is null or Empty for block %s at %s by player %s",
-          block,
-          pos,
-          playerRef.getUsername()
-        );
-      }
-      return;
-    }
+    if (blockId == null || blockId.equals("Empty")) return;
 
     World world = player.getWorld();
 
-    if (world == null) {
-      if (ZUtils.getConfig().isDebug()) {
-        ZUtils.getLog().atWarning().log(
-          "BlockBreakSystem: World is null for player %s",
-          playerRef.getUsername()
-        );
-      }
-      return;
-    }
+    if (world == null) return;
     world.execute(() -> {
       WorldChunk worldChunk = world.getChunkIfInMemory(ChunkUtil.indexChunkFromBlock(pos.getX(), pos.getZ()));
-      if (worldChunk == null) {
-        ZUtils.getLog().atWarning().log(
-          "Player %s break a block at %s in world %s, but the chunk is null",
-          playerRef.getUsername(),
-          pos,
-          world.getName()
-        );
-        return;
-      }
+      if (worldChunk == null) return;
+
 
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
         BLOCK_PLACE.computeIfAbsent(
@@ -100,16 +67,6 @@ public final class BlockBreakSystem extends EntityEventSystem<EntityStore, Break
         );
         boolean placed = RegionBlockStorage.isPlaced(world, worldChunk, pos);
         RegionBlockStorage.removePlaced(world, worldChunk, pos);
-        if (ZUtils.getConfig().isDebug()) {
-          ZUtils.getLog().atInfo().log(
-            "Player %s break block at %s in world %s. Already placed: %s",
-            playerRef.getUsername(),
-            pos,
-            world.getName(),
-            placed
-          );
-        }
-
         var event = new EventBlockBreak(
           player,
           playerRef,
@@ -119,7 +76,7 @@ public final class BlockBreakSystem extends EntityEventSystem<EntityStore, Break
           placed,
           blockId
         );
-
+        if (ZUtilsEvents.BLOCK_BREAK_EVENT.isEmpty()) return null;
         ZUtilsEvents.BLOCK_BREAK_EVENT.emit(event);
         return event;
       });

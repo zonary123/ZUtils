@@ -69,6 +69,7 @@ public class ZUtils extends JavaPlugin {
     this.getEntityStoreRegistry().registerSystem(new KillEntitySystem());
     this.getEntityStoreRegistry().registerSystem(new UseBlockECS());
     this.getEntityStoreRegistry().registerSystem(new TravelSystem());
+    PlayerChatEcs.register();
   }
 
 

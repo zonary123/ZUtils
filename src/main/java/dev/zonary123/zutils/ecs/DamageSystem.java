@@ -1,5 +1,7 @@
 package dev.zonary123.zutils.ecs;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
@@ -15,14 +17,46 @@ import dev.zonary123.zutils.ZUtils;
 import dev.zonary123.zutils.events.ZUtilsEvents;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
  * @author Carlos Varas Alonso - 20/01/2026 16:07
  */
 public class DamageSystem extends DamageEventSystem {
+  public static final class DamageTracker {
+
+    // target UUID -> (player UUID -> total damage)
+    private static final Cache<UUID, Map<UUID, Damage>> DAMAGE_CACHE =
+      Caffeine.newBuilder()
+        .expireAfterAccess(30, TimeUnit.SECONDS)
+        .maximumSize(10_000)
+        .build();
+
+    public static void recordDamage(UUID target, UUID attacker, Damage damage) {
+      Map<UUID, Damage> map = DAMAGE_CACHE.get(
+        target,
+        k -> new ConcurrentHashMap<>()
+      );
+
+      map.put(attacker, damage);
+    }
+
+    public static Map<UUID, Damage> getContributors(UUID target) {
+      return DAMAGE_CACHE.getIfPresent(target);
+    }
+
+    public static void clear(UUID target) {
+      DAMAGE_CACHE.invalidate(target);
+    }
+  }
+
+
   public void handle(int index, ArchetypeChunk<EntityStore> archetypeChunk, Store<EntityStore> store, CommandBuffer<EntityStore> commandBuffer, Damage damage) {
+    if (ZUtilsEvents.DAMAGE_EVENT.isEmpty() && ZUtilsEvents.KILL_ENTITY_EVENT.isEmpty()) return;
     if (damage.getAmount() <= 0) return;
     var targetRef = archetypeChunk.getReferenceTo(index);
     if (!targetRef.isValid()) return;
@@ -63,6 +97,11 @@ public class DamageSystem extends DamageEventSystem {
         );
       }
 
+      DamageTracker.recordDamage(
+        targetUuid,
+        attackerUuid,
+        damage
+      );
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
         // Send damage event
         ZUtilsEvents.DAMAGE_EVENT.emit(

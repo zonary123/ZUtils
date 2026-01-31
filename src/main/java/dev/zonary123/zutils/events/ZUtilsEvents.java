@@ -1,5 +1,6 @@
 package dev.zonary123.zutils.events;
 
+import com.hypixel.hytale.server.core.universe.PlayerRef;
 import dev.zonary123.zutils.events.models.*;
 
 /**
@@ -16,4 +17,5 @@ public class ZUtilsEvents {
   public static final EventChannel<Chat> CHAT_EVENT = new EventChannel<>();
   public static final EventChannel<Command> COMMAND_EVENT = new EventChannel<>();
   public static final EventChannel<Travel> TRAVEL_EVENT = new EventChannel<>();
+  public static final EventChannel<PlayerRef> TIME_PLAYER_EVENT = new EventChannel<>();
 }

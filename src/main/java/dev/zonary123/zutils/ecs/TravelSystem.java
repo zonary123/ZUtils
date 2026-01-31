@@ -48,6 +48,7 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
     @NonNull Store<EntityStore> store,
     @NonNull CommandBuffer<EntityStore> commandBuffer
   ) {
+    if (ZUtilsEvents.TRAVEL_EVENT.isEmpty() && ZUtilsEvents.TIME_PLAYER_EVENT.isEmpty()) return;
     var ref = archetypeChunk.getReferenceTo(index);
     PlayerRef playerRef = store.getComponent(ref, PlayerRef.getComponentType());
     if (playerRef == null) return;
@@ -55,9 +56,13 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
     if (worldUuid == null) return;
     World world = Universe.get().getWorld(worldUuid);
     if (world == null) return;
+
     world.execute(() -> {
       Player player = store.getComponent(ref, Player.getComponentType());
       if (player == null) return;
+      WorldMapTracker worldMapTracker = player.getWorldMapTracker();
+      var transformPosition = worldMapTracker.getTransformComponent();
+      if (transformPosition == null) return;
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
         long now = System.currentTimeMillis();
         Long lastTravelTime = LAST_TRAVEL_TIME_CACHE.getIfPresent(playerRef.getUuid());
@@ -66,9 +71,8 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
           if (timeSinceLastTravel < TRAVEL_COOLDOWN_MS) return null;
         }
         LAST_TRAVEL_TIME_CACHE.put(playerRef.getUuid(), now);
-        WorldMapTracker worldMapTracker = player.getWorldMapTracker();
-        var transformPosition = worldMapTracker.getTransformComponent();
-        if (transformPosition == null) return null;
+        ZUtilsEvents.TIME_PLAYER_EVENT.emit(playerRef);
+
         Vector3d currentPos = transformPosition.getPosition();
         Vector3d lastPos = LAST_POS_CACHE.getIfPresent(playerRef.getUuid());
         double distance;
@@ -90,14 +94,8 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
           .distanceTraveled(distance)
           .position(currentPos)
           .build();
-        if (ZUtils.getConfig().isDebug()) {
-          ZUtils.getLog().atInfo().log(
-            "Player %s, emit event Travel: %s",
-            playerRef.getUsername(),
-            travel
-          );
-        }
         ZUtilsEvents.TRAVEL_EVENT.emit(travel);
+
         return null;
       });
     });

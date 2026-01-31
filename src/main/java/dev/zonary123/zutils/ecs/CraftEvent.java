@@ -65,6 +65,7 @@ public final class CraftEvent extends EntityEventSystem<EntityStore, CraftRecipe
           recipe.getId()
         );
       }
+      if (ZUtilsEvents.CRAFT_EVENT.isEmpty()) return null;
       ZUtilsEvents.CRAFT_EVENT.emit(
         new Craft(
           player,

@@ -56,6 +56,8 @@ public class TestCommand extends AbstractPlayerCommand {
           "EntityId: " + id.getId()
         )
       );
+
+
     });
   }
 }
