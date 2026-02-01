@@ -1,106 +1,112 @@
 package dev.zonary123.zutils.utils.economy;
 
-import lombok.Data;
-
 import java.math.BigDecimal;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.logging.Logger;
 
 /**
- *
- * @author Carlos Varas Alonso - 18/01/2026 7:17
+ * Base abstract class for any economy provider.
+ * <p>
+ * Implementations must be thread-safe and handle their own persistence / storage logic.
+ * All public API methods are asynchronous and return CompletableFutures.
+ * </p>
+ * Supports multi-currency, safe transfers with rollback, and audit reasons.
  */
-@Data
 public abstract class Economy {
+
+  private static final Logger LOGGER = Logger.getLogger(Economy.class.getName());
+
   /**
-   * ID of the economy
+   * Unique ID of this economy provider
    */
   private final String economyId;
 
-  /**
-   * Constructor for Economy.
-   *
-   * @param economyId ID of the economy
-   */
   protected Economy(String economyId) {
-    this.economyId = economyId;
+    this.economyId = Objects.requireNonNull(economyId, "economyId cannot be null");
   }
 
-  /**
-   * Get the balance of a player for a specific currency.
-   *
-   * @param playerId   UUID of the player
-   * @param currencyId ID of the currency
-   * @return the balance of the player in the specified currency
-   */
-  public abstract BigDecimal getBalance(UUID playerId, String currencyId);
+  public String getEconomyId() {
+    return economyId;
+  }
 
-  /**
-   * Set the balance of a player for a specific currency.
-   *
-   * @param playerId   UUID of the player
-   * @param currencyId ID of the currency
-   * @param amount     Amount to set
-   * @param reason     Reason for setting the balance
-   * @return true if the balance was set successfully, false otherwise
-   */
-  public abstract boolean setBalance(UUID playerId, String currencyId, BigDecimal amount, String reason);
+  // =======================
+  // Abstract methods to implement
+  // =======================
 
-  /**
-   * Deposit an amount to a player's balance for a specific currency.
-   *
-   * @param playerId   UUID of the player
-   * @param currencyId ID of the currency
-   * @param amount     Amount to deposit
-   * @param reason     Reason for the deposit
-   * @return true if the deposit was successful, false otherwise
-   */
-  public abstract boolean deposit(UUID playerId, String currencyId, BigDecimal amount, String reason);
+  public abstract CompletableFuture<EconomyResult> getBalance(UUID playerId, String currencyId);
 
-  /**
-   * Withdraw an amount from a player's balance for a specific currency.
-   *
-   * @param playerId   UUID of the player
-   * @param currencyId ID of the currency
-   * @param amount     Amount to withdraw
-   * @param reason     Reason for the withdrawal
-   * @return true if the withdrawal was successful, false otherwise
-   */
-  public abstract boolean withdraw(UUID playerId, String currencyId, BigDecimal amount, String reason);
+  public abstract CompletableFuture<EconomyResult> setBalance(UUID playerId, String currencyId, BigDecimal amount, String reason);
 
-  /**
-   * Check if a player has at least a certain amount of a specific currency.
-   *
-   * @param playerId   UUID of the player
-   * @param currencyId ID of the currency
-   * @param amount     Amount to check
-   * @return true if the player has at least the specified amount, false otherwise
-   */
-  public abstract boolean hasBalance(UUID playerId, String currencyId, BigDecimal amount);
+  public abstract CompletableFuture<EconomyResult> deposit(UUID playerId, String currencyId, BigDecimal amount, String reason);
 
-  /**
-   * Format a currency amount for display.
-   *
-   * @param currencyId ID of the currency
-   * @param amount     Amount to format
-   * @return formatted currency string
-   */
+  public abstract CompletableFuture<EconomyResult> withdraw(UUID playerId, String currencyId, BigDecimal amount, String reason);
+
+  public abstract CompletableFuture<Boolean> hasBalance(UUID playerId, String currencyId, BigDecimal amount);
+
   public abstract String formatCurrency(String currencyId, BigDecimal amount);
 
+  // =======================
+  // Default business logic
+  // =======================
+
   /**
-   * Transfer an amount from one player to another for a specific currency.
-   *
-   * @param fromPlayerId UUID of the player to transfer from
-   * @param toPlayerId   UUID of the player to transfer to
-   * @param currencyId   ID of the currency
-   * @param amount       Amount to transfer
-   * @param reason       Reason for the transfer
-   * @return true if the transfer was successful, false otherwise
+   * Transfer an amount from one player to another safely.
+   * <p>
+   * - Rolls back if deposit fails.
+   * - Handles exceptions internally and returns a failed EconomyResult on error.
+   * - Validates amount > 0 and different players.
+   * </p>
    */
-  public abstract boolean transfer(
+  public CompletableFuture<EconomyResult> transfer(
     UUID fromPlayerId,
     UUID toPlayerId,
     String currencyId,
     BigDecimal amount,
     String reason
-  );
+  ) {
+    if (fromPlayerId.equals(toPlayerId)) return getBalance(fromPlayerId, currencyId)
+      .thenApply(balance -> EconomyResult.success(balance.getBefore(), balance.getBefore(), "Self-transfer ignored"));
+
+    if (amount == null || amount.signum() <= 0) return getBalance(fromPlayerId, currencyId)
+      .thenApply(balance -> EconomyResult.fail("Invalid transfer amount", balance.getBefore()));
+
+
+    Objects.requireNonNull(currencyId, "currencyId cannot be null");
+    Objects.requireNonNull(reason, "reason cannot be null");
+
+    return withdraw(fromPlayerId, currencyId, amount, reason)
+      .thenCompose(withdrawResult -> {
+        if (!withdrawResult.isSuccess()) return CompletableFuture.completedFuture(EconomyResult.fail(
+          "Withdrawal failed: " + withdrawResult.getReason(),
+          withdrawResult.getBefore()
+        ));
+
+        return deposit(toPlayerId, currencyId, amount, reason)
+          .thenCompose(depositResult -> {
+            if (!depositResult.isSuccess()) {
+              // rollback
+              return deposit(fromPlayerId, currencyId, amount, "Transfer rollback")
+                .thenApply(r -> EconomyResult.fail(
+                  "Deposit failed, rolled back: " + depositResult.getReason(),
+                  withdrawResult.getBefore()
+                ));
+            }
+
+            return CompletableFuture.completedFuture(EconomyResult.success(
+              withdrawResult.getBefore(),
+              withdrawResult.getBefore().subtract(amount),
+              reason
+            ));
+          });
+      })
+      .handle((result, throwable) -> {
+        if (throwable != null) {
+          LOGGER.severe("Economy transfer failed: " + throwable);
+          return EconomyResult.fail("Transfer exception occurred", BigDecimal.ZERO);
+        }
+        return result;
+      });
+  }
 }

@@ -1,14 +1,13 @@
 package dev.zonary123.zutils.models.rewards;
 
 import com.hypixel.hytale.protocol.packets.interface_.NotificationStyle;
-import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.Message;
-import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 import dev.zonary123.zutils.api.EconomyApi;
+import dev.zonary123.zutils.utils.PlayerUtils;
 import dev.zonary123.zutils.utils.economy.Economy;
 import lombok.Data;
 
@@ -112,9 +111,10 @@ public class Reward {
    */
   private void giveCommandReward(AdvancedRewards.DataPlayer dataPlayer) {
     PlayerRef playerRef = dataPlayer.getPlayerRef();
-    String command = reward.split(":", 2)[1];
-    command = command.replace("%player%", playerRef.getUsername());
-    HytaleServer.get().getCommandManager().handleCommand(ConsoleSender.INSTANCE, command);
+    PlayerUtils.executeCommand(
+      reward.substring(reward.indexOf(":") + 1),
+      playerRef
+    );
   }
 
   /**
