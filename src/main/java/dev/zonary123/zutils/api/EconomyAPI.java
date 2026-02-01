@@ -66,7 +66,7 @@ public final class EconomyAPI {
             ZUtils.getLog().atWarning().log("Failed to register economy '%s': %s".formatted(economyId, ex.getMessage()));
           }
         });
-    } catch (Exception e) {
+    } catch (NoClassDefFoundError | NoSuchMethodError | Exception e) {
       ZUtils.getLog().atWarning().log("Exception while registering economy: %s".formatted(e.getMessage()));
       ECONOMIES.remove(economyId);
     }
@@ -157,4 +157,6 @@ public final class EconomyAPI {
     if (economy == null) throw new IllegalArgumentException("Economy not found: " + selector.getEconomy());
     return economy;
   }
+
+
 }

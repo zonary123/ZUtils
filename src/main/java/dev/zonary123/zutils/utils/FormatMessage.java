@@ -6,18 +6,62 @@ import fi.sulku.hytale.TinyMsg;
 import java.awt.*;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class FormatMessage {
 
+  private static final Map<String, String> LEGACY_COLOR_MAP = Map.ofEntries(
+    Map.entry("0", "#000000"),
+    Map.entry("1", "#0000AA"),
+    Map.entry("2", "#00AA00"),
+    Map.entry("3", "#00AAAA"),
+    Map.entry("4", "#AA0000"),
+    Map.entry("5", "#AA00AA"),
+    Map.entry("6", "#FFAA00"),
+    Map.entry("7", "#AAAAAA"),
+    Map.entry("8", "#555555"),
+    Map.entry("9", "#5555FF"),
+    Map.entry("a", "#55FF55"),
+    Map.entry("b", "#55FFFF"),
+    Map.entry("c", "#FF5555"),
+    Map.entry("d", "#FF55FF"),
+    Map.entry("e", "#FFFF55"),
+    Map.entry("f", "#FFFFFF")
+  );
+
   public static Message formatMessage(String input) {
+    if (input == null || input.isEmpty()) return Message.empty();
+
+    StringBuilder builder = new StringBuilder(input.length());
+    int length = input.length();
+
+    for (int i = 0; i < length; i++) {
+      char c = input.charAt(i);
+
+      if ((c == '&' || c == '§') && i + 1 < length) {
+        char code = Character.toLowerCase(input.charAt(i + 1));
+        String hex = LEGACY_COLOR_MAP.get(String.valueOf(code));
+        if (hex != null) {
+          builder.append("<#").append(hex.substring(1)).append(">");
+          i++;
+          continue;
+        }
+      }
+
+      builder.append(c);
+    }
+
+    input = builder.toString();
+
     try {
       return TinyMsg.parse(input);
     } catch (NoSuchMethodError | NoClassDefFoundError | Exception ignored) {
       return parseLegacy(input);
     }
   }
+
 
   // --------------------------------------------------
   // Regex

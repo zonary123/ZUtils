@@ -8,6 +8,7 @@ import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.util.NotificationUtil;
 import dev.zonary123.zutils.ZUtils;
 import dev.zonary123.zutils.models.DurationValue;
 
@@ -50,6 +51,42 @@ public class PlayerUtils {
       );
     }
   }
+
+  /**
+   * Method to send a notification to a player.
+   *
+   * @param playerUuid The player's UUID.
+   * @param title      The title of the notification.
+   * @param subtitle   The subtitle of the notification.
+   * @param icon       The icon of the notification.
+   * @param prefix     The prefix to add to the title and subtitle.
+   */
+  public static void sendNotification(UUID playerUuid, String title, String subtitle, String icon, String prefix) {
+    String safeTitle = title != null ? title.replace("%prefix%", prefix) : "";
+    String safeSubtitle = subtitle != null ? subtitle.replace("%prefix%", prefix) : "";
+
+    if (safeTitle.isBlank() && safeSubtitle.isBlank()) return;
+
+    PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
+    if (playerRef == null) return;
+
+    if (safeSubtitle.isBlank()) {
+      NotificationUtil.sendNotification(
+        playerRef.getPacketHandler(),
+        FormatMessage.formatMessage(safeTitle),
+        icon
+      );
+    } else {
+      NotificationUtil.sendNotification(
+        playerRef.getPacketHandler(),
+        FormatMessage.formatMessage(safeTitle),
+        FormatMessage.formatMessage(safeSubtitle),
+        icon
+      );
+    }
+
+  }
+
 
   /**
    * Method to get the cooldown based on the player's permissions.
