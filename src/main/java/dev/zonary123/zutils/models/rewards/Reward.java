@@ -6,7 +6,7 @@ import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.inventory.ItemStack;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
-import dev.zonary123.zutils.api.EconomyApi;
+import dev.zonary123.zutils.api.EconomyAPI;
 import dev.zonary123.zutils.utils.PlayerUtils;
 import dev.zonary123.zutils.utils.economy.Economy;
 import lombok.Data;
@@ -69,7 +69,7 @@ public class Reward {
    * Format: item:<amount>:<itemId>
    * Format: item:<amount>-<amount>:<itemId>
    *
-   * @param player Player to give the reward to.
+   * @param data DataPlayer object containing player reference.
    * @see ItemStack
    */
   public void giveItemReward(AdvancedRewards.DataPlayer data) {
@@ -143,7 +143,7 @@ public class Reward {
     } else {
       amount = Double.parseDouble(amountStr);
     }
-    Economy economy = EconomyApi.getEconomy(economyId);
+    Economy economy = EconomyAPI.getEconomy(economyId);
     if (economy != null) {
       economy.deposit(playerUuid, currencyId, BigDecimal.valueOf(amount), reason);
     }

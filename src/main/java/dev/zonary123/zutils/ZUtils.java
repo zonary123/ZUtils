@@ -4,6 +4,7 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.zonary123.zutils.adapters.AtomicReferenceAdapter;
+import dev.zonary123.zutils.api.EconomyAPI;
 import dev.zonary123.zutils.commands.ZUtilsCommand;
 import dev.zonary123.zutils.config.Config;
 import dev.zonary123.zutils.config.Lang;
@@ -46,6 +47,11 @@ public class ZUtils extends JavaPlugin {
     } catch (Exception e) {
       getLogger().atSevere().withCause(e).log("Error during ZUtils setup");
     }
+  }
+
+  @Override
+  protected void start() {
+    EconomyAPI.registerEconomyProviders();
   }
 
   private void files() {

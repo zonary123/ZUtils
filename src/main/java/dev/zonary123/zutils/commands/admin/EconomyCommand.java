@@ -3,7 +3,7 @@ package dev.zonary123.zutils.commands.admin;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
-import dev.zonary123.zutils.api.EconomyApi;
+import dev.zonary123.zutils.api.EconomyAPI;
 import dev.zonary123.zutils.utils.economy.Economy;
 import org.jspecify.annotations.NonNull;
 
@@ -16,8 +16,9 @@ public class EconomyCommand extends CommandBase {
     super("economies", "Show economy information");
   }
 
-  @Override protected void executeSync(@NonNull CommandContext commandContext) {
-    var economies = EconomyApi.getEconomies();
+  @Override
+  protected void executeSync(@NonNull CommandContext commandContext) {
+    var economies = EconomyAPI.getEconomies();
     StringBuilder message = new StringBuilder("Available Economies:\n");
     for (Economy economy : economies.values()) {
       message.append("- ").append(economy.getEconomyId()).append("\n");

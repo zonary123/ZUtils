@@ -14,6 +14,7 @@ import dev.zonary123.zutils.events.models.Command;
 public class PlayerChatEcs {
   public static void register() {
     ZUtils.get().getEventRegistry().registerGlobal(PlayerChatEvent.class, evt -> {
+      if (evt.isCancelled()) return;
       if (ZUtilsEvents.CHAT_EVENT.isEmpty()) return;
       PlayerRef playerRef = evt.getSender();
       String content = evt.getContent();

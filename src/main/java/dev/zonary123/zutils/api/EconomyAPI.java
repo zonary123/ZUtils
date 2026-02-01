@@ -6,6 +6,7 @@ import dev.zonary123.zutils.utils.economy.Economy;
 import dev.zonary123.zutils.utils.economy.EconomyResult;
 import dev.zonary123.zutils.utils.economy.providers.EcoTaleEconomyProvider;
 import dev.zonary123.zutils.utils.economy.providers.EconomySystemProvider;
+import dev.zonary123.zutils.utils.economy.providers.EssentialsPlusProvider;
 import dev.zonary123.zutils.utils.economy.providers.ZEconomyProvider;
 
 import javax.annotation.Nonnull;
@@ -22,18 +23,20 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Carlos
  */
-public final class EconomyApi {
+public final class EconomyAPI {
 
   private static final Map<String, Economy> ECONOMIES = new ConcurrentHashMap<>();
   private static Economy DEFAULT_ECONOMY;
 
-  static {
+
+  private EconomyAPI() {
+  }
+
+  public static void registerEconomyProviders() {
     registerEconomy(new ZEconomyProvider("ZEconomy"));
     registerEconomy(new EcoTaleEconomyProvider("EcoTale"));
     registerEconomy(new EconomySystemProvider("EconomySystem"));
-  }
-
-  private EconomyApi() {
+    registerEconomy(new EssentialsPlusProvider("EssentialsPlus"));
   }
 
   /* -------------------------------------------------------------------------- */
@@ -42,29 +45,42 @@ public final class EconomyApi {
 
   public static void registerEconomy(@Nonnull Economy economy) {
     String economyId = economy.getEconomyId();
-    if (ECONOMIES.putIfAbsent(economyId, economy) != null) {
-      ZUtils.getLog().atWarning().log("Economy with ID '%s' is already registered.".formatted(economyId));
-    }
-
     try {
-      // test registration
-      economy.getBalance(UUID.randomUUID(), "TEST_CURRENCY");
-      ZUtils.getLog().atInfo().log("Economy '%s' registered successfully.".formatted(economyId));
-    } catch (Throwable e) {
-      ZUtils.getLog().atWarning().log("Economy '%s' registration test failed: %s".formatted(economyId, e.getMessage()));
+      if (ECONOMIES.putIfAbsent(economyId, economy) != null) {
+        ZUtils.getLog().atWarning().log("Economy with ID '%s' is already registered.".formatted(economyId));
+        return;
+      }
+      UUID testPlayer = UUID.randomUUID();
+      String currencyId = "";
+
+      economy.getBalance(testPlayer, currencyId)
+        .whenComplete((result, ex) -> {
+          if (ex == null) {
+            ZUtils.getLog().atInfo().log("Economy '%s' registered successfully.".formatted(economyId));
+            if (DEFAULT_ECONOMY == null) {
+              DEFAULT_ECONOMY = economy;
+              ZUtils.getLog().atInfo().log("Economy '%s' set as default economy.".formatted(economyId));
+            }
+          } else {
+            ECONOMIES.remove(economyId);
+            ZUtils.getLog().atWarning().log("Failed to register economy '%s': %s".formatted(economyId, ex.getMessage()));
+          }
+        });
+    } catch (Exception e) {
+      ZUtils.getLog().atWarning().log("Exception while registering economy: %s".formatted(e.getMessage()));
       ECONOMIES.remove(economyId);
     }
   }
 
   @Nullable
   public static Economy getEconomy(@Nonnull String economyId) {
-    if (ECONOMIES.size() == 1) return ECONOMIES.values().iterator().next();
+    if (ECONOMIES.size() == 1) return DEFAULT_ECONOMY;
     Economy economy = ECONOMIES.get(economyId);
     if (economy == null) {
       if (ZUtils.getConfig().isDebug()) {
         ZUtils.getLog().atWarning().log("Economy with ID '%s' not found. Using default economy.".formatted(economyId));
       }
-      economy = ECONOMIES.values().iterator().next();
+      economy = DEFAULT_ECONOMY;
     }
     return economy;
   }

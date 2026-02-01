@@ -20,7 +20,10 @@
         "Hytale:BlockStateModule": "*"
     },
     "OptionalDependencies": {
-        
+        "fof1092:EssentialsPlus": "*",
+        "Economy:EconomySystem": "*",
+        "Ecotale:Ecotale": "*",
+        "Zonary123:ZEconomy": "*"
     },
     "DisabledByDefault": false,
     "Main": "dev.zonary123.zutils.ZUtils",

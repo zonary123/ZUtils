@@ -8,7 +8,7 @@ import java.util.UUID;
  *
  * @author Carlos Varas Alonso - 25/01/2026 1:33
  */
-public class RewardApi {
+public class RewardAPI {
 
   /**
    * Give advanced rewards to a player.

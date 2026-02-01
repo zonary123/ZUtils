@@ -3,6 +3,8 @@ package dev.zonary123.zutils.ecs;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.dependency.Dependency;
+import com.hypixel.hytale.component.dependency.RootDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.EntityEventSystem;
 import com.hypixel.hytale.server.core.event.events.ecs.UseBlockEvent;
@@ -11,6 +13,8 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import dev.zonary123.zutils.ZUtils;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Set;
 
 /**
  *
@@ -54,7 +58,13 @@ public class UseBlockECS extends EntityEventSystem<EntityStore, UseBlockEvent.Po
     }
   }
 
-  @Override public @Nullable Query<EntityStore> getQuery() {
+  @Override
+  public @Nullable Query<EntityStore> getQuery() {
     return PlayerRef.getComponentType();
+  }
+
+  @Override
+  public @NonNull Set<Dependency<EntityStore>> getDependencies() {
+    return RootDependency.lastSet();
   }
 }

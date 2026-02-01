@@ -3,6 +3,8 @@ package dev.zonary123.zutils.ecs;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.dependency.Dependency;
+import com.hypixel.hytale.component.dependency.RootDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.EntityEventSystem;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -13,6 +15,8 @@ import dev.zonary123.zutils.ZUtils;
 import dev.zonary123.zutils.events.ZUtilsEvents;
 import dev.zonary123.zutils.events.models.Craft;
 import org.jspecify.annotations.NonNull;
+
+import java.util.Set;
 
 public final class CraftEvent extends EntityEventSystem<EntityStore, CraftRecipeEvent.Post> {
 
@@ -76,5 +80,10 @@ public final class CraftEvent extends EntityEventSystem<EntityStore, CraftRecipe
       );
       return null;
     });
+  }
+
+  @Override
+  public @NonNull Set<Dependency<EntityStore>> getDependencies() {
+    return RootDependency.lastSet();
   }
 }

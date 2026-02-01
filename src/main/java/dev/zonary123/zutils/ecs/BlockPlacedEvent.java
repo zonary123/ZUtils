@@ -3,6 +3,8 @@ package dev.zonary123.zutils.ecs;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.dependency.Dependency;
+import com.hypixel.hytale.component.dependency.RootDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.EntityEventSystem;
 import com.hypixel.hytale.math.util.ChunkUtil;
@@ -21,6 +23,7 @@ import dev.zonary123.zutils.events.models.EventBlockPlaced;
 import org.jspecify.annotations.NonNull;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -87,5 +90,10 @@ public class BlockPlacedEvent extends EntityEventSystem<EntityStore, PlaceBlockE
   @Override
   public Query<EntityStore> getQuery() {
     return PlayerRef.getComponentType();
+  }
+
+  @Override
+  public @NonNull Set<Dependency<EntityStore>> getDependencies() {
+    return RootDependency.lastSet();
   }
 }

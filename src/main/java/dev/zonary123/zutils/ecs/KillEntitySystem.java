@@ -3,6 +3,8 @@ package dev.zonary123.zutils.ecs;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.dependency.Dependency;
+import com.hypixel.hytale.component.dependency.RootDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
@@ -20,6 +22,7 @@ import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -88,4 +91,8 @@ public class KillEntitySystem extends DeathSystems.OnDeathSystem {
     return NPCEntity.getComponentType();
   }
 
+  @Override
+  public @NonNull Set<Dependency<EntityStore>> getDependencies() {
+    return RootDependency.lastSet();
+  }
 }

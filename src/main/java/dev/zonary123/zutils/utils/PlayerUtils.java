@@ -7,17 +7,50 @@ import com.hypixel.hytale.server.core.HytaleServer;
 import com.hypixel.hytale.server.core.console.ConsoleSender;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.Universe;
 import dev.zonary123.zutils.ZUtils;
 import dev.zonary123.zutils.models.DurationValue;
 
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
  * @author Carlos Varas Alonso - 28/06/2024 20:44
  */
 public class PlayerUtils {
+
+  /**
+   * Method to send a message to a player.
+   *
+   * @param playerUuid The player's UUID.
+   * @param message    The message to send.
+   */
+  public static void sendMessage(UUID playerUuid, String message) {
+    sendMessage(playerUuid, message, "");
+  }
+
+  /**
+   * Method to send a message to a player with a prefix.
+   *
+   * @param playerUuid The player's UUID.
+   * @param message    The message to send.
+   * @param prefix     The prefix to add to the message.
+   */
+  public static void sendMessage(UUID playerUuid, String message, String prefix) {
+    if (message == null || message.isEmpty()) return;
+    PlayerRef playerRef = Universe.get().getPlayer(playerUuid);
+    if (playerRef != null) {
+      playerRef.sendMessage(
+        FormatMessage.formatMessage(
+          message
+            .replace("%prefix%", prefix)
+        )
+      );
+    }
+  }
+
   /**
    * Method to get the cooldown based on the player's permissions.
    *

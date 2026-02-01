@@ -5,6 +5,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.component.dependency.Dependency;
+import com.hypixel.hytale.component.dependency.RootDependency;
 import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -20,6 +22,7 @@ import dev.zonary123.zutils.events.models.Travel;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -95,7 +98,6 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
           .position(currentPos)
           .build();
         ZUtilsEvents.TRAVEL_EVENT.emit(travel);
-
         return null;
       });
     });
@@ -104,5 +106,10 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
   @Override
   public @Nullable Query<EntityStore> getQuery() {
     return PlayerRef.getComponentType();
+  }
+
+  @Override
+  public @NonNull Set<Dependency<EntityStore>> getDependencies() {
+    return RootDependency.lastSet();
   }
 }

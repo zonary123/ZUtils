@@ -30,7 +30,7 @@ public abstract class Economy {
   public String getEconomyId() {
     return economyId;
   }
-
+  
   // =======================
   // Abstract methods to implement
   // =======================

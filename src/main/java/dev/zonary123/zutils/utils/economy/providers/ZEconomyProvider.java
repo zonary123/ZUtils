@@ -17,6 +17,7 @@ public class ZEconomyProvider extends Economy {
     super(economyId);
   }
 
+
   @Override
   public CompletableFuture<EconomyResult> getBalance(UUID playerId, String currencyId) {
     return CompletableFuture.supplyAsync(() -> {
