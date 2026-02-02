@@ -80,7 +80,7 @@ public class PlayerUtils {
       NotificationUtil.sendNotification(
         playerRef.getPacketHandler(),
         FormatMessage.formatMessage(safeTitle),
-        FormatMessage.formatMessage(safeSubtitle),
+        safeSubtitle.isBlank() ? null : FormatMessage.formatMessage(safeSubtitle),
         icon
       );
     }
@@ -97,10 +97,12 @@ public class PlayerUtils {
    * @return The cooldown.
    */
   public static int getCooldown(Map<String, Integer> cooldowns, int defaultCooldown, PlayerRef player) {
+    if (player == null) return defaultCooldown;
     int cooldown = defaultCooldown;
     var entries = cooldowns.entrySet();
     for (Map.Entry<String, Integer> entry : entries) {
-      if (entry.getValue() < cooldown && player != null && PermissionsModule.get().hasPermission(player.getUuid(), entry.getKey())) {
+      if (entry.getValue() >= cooldown) continue;
+      if (PermissionsModule.get().hasPermission(player.getUuid(), entry.getKey())) {
         cooldown = entry.getValue();
       }
     }
@@ -108,11 +110,12 @@ public class PlayerUtils {
   }
 
   public static long getCooldown(Map<String, DurationValue> cooldowns, DurationValue defaultCooldown, PlayerRef player) {
+    if (player == null) return defaultCooldown.toMillis();
     long cooldown = defaultCooldown.toMillis();
     var entries = cooldowns.entrySet();
     for (Map.Entry<String, DurationValue> entry : entries) {
       if (entry.getValue().toMillis() > cooldown) continue;
-      if (player != null && PermissionsModule.get().hasPermission(player.getUuid(), entry.getKey())) {
+      if (PermissionsModule.get().hasPermission(player.getUuid(), entry.getKey())) {
         cooldown = entry.getValue().toMillis();
       }
     }

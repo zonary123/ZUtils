@@ -17,14 +17,14 @@ public class Lang {
   private String unknown = "&cUnknown";
   private String nocooldown = "&cNo cooldown";
   // Time
-  private String days = "&6%s &adays ";
-  private String day = "&6%s &aday ";
-  private String hours = "&6%s &ahours ";
-  private String hour = "&6%s &ahour ";
-  private String minutes = "&6%s &aminutes ";
-  private String minute = "&6%s &aminute ";
-  private String seconds = "&6%s &aseconds ";
-  private String second = "&6%s &asecond";
+  private String days = "&6%s &ad ";
+  private String day = "&6%s &ad ";
+  private String hours = "&6%s &ah ";
+  private String hour = "&6%s &ah ";
+  private String minutes = "&6%s &am ";
+  private String minute = "&6%s &am ";
+  private String seconds = "&6%s &as ";
+  private String second = "&6%s &as";
 
   public static Lang init() {
     Path path = ZUtils.getPath();

@@ -66,29 +66,30 @@ public class TravelSystem extends EntityTickingSystem<EntityStore> {
       WorldMapTracker worldMapTracker = player.getWorldMapTracker();
       var transformPosition = worldMapTracker.getTransformComponent();
       if (transformPosition == null) return;
+      Vector3d currentPos = transformPosition.getPosition().clone();
+      UUID playerUuid = playerRef.getUuid();
       ZUtils.ASYNC_CONTEXT.runAsync(() -> {
         long now = System.currentTimeMillis();
-        Long lastTravelTime = LAST_TRAVEL_TIME_CACHE.getIfPresent(playerRef.getUuid());
+        Long lastTravelTime = LAST_TRAVEL_TIME_CACHE.getIfPresent(playerUuid);
         if (lastTravelTime != null) {
           long timeSinceLastTravel = now - lastTravelTime;
           if (timeSinceLastTravel < TRAVEL_COOLDOWN_MS) return null;
         }
-        LAST_TRAVEL_TIME_CACHE.put(playerRef.getUuid(), now);
+        LAST_TRAVEL_TIME_CACHE.put(playerUuid, now);
         ZUtilsEvents.TIME_PLAYER_EVENT.emit(playerRef);
 
-        Vector3d currentPos = transformPosition.getPosition();
-        Vector3d lastPos = LAST_POS_CACHE.getIfPresent(playerRef.getUuid());
+        Vector3d lastPos = LAST_POS_CACHE.getIfPresent(playerUuid);
         double distance;
         if (lastPos != null) {
           distance = currentPos.distanceTo(lastPos);
           if (distance < 0.1 || distance > 20) {
-            LAST_POS_CACHE.put(playerRef.getUuid(), currentPos.clone());
+            LAST_POS_CACHE.put(playerUuid, currentPos.clone());
             return null;
           }
         } else {
           distance = 0;
         }
-        LAST_POS_CACHE.put(playerRef.getUuid(), currentPos.clone());
+        LAST_POS_CACHE.put(playerUuid, currentPos.clone());
         Travel travel = Travel.builder()
           .playerRef(playerRef)
           .player(player)

@@ -2,7 +2,6 @@ package dev.zonary123.zutils.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.TypeAdapter;
 import dev.zonary123.zutils.utils.async.AsyncContext;
 import org.jspecify.annotations.Nullable;
 
@@ -10,11 +9,7 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -67,7 +63,8 @@ public final class UtilsFile {
   private static volatile Gson GSON;
   private static final ConcurrentMap<Type, Object> ADAPTERS = new ConcurrentHashMap<>();
 
-  private UtilsFile() {}
+  private UtilsFile() {
+  }
 
   public static void registerAdapter(
     @Nonnull Type type,
@@ -302,5 +299,22 @@ public final class UtilsFile {
 
   public static Stream<Path> list(@Nonnull Path directory) throws IOException {
     return Files.list(directory);
+  }
+
+  public static List<Path> getAllFiles(Path folder) throws IOException {
+    try (Stream<Path> walk = Files.walk(folder)) {
+      return walk
+        .filter(Files::isRegularFile)
+        .collect(Collectors.toList());
+    }
+  }
+
+  public static List<Path> getAllJsonFiles(Path folder) throws IOException {
+    try (Stream<Path> walk = Files.walk(folder)) {
+      return walk
+        .filter(Files::isRegularFile)
+        .filter(p -> p.toString().endsWith(".json"))
+        .collect(Collectors.toList());
+    }
   }
 }

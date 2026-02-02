@@ -5,9 +5,12 @@ import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import dev.zonary123.zutils.adapters.AtomicReferenceAdapter;
 import dev.zonary123.zutils.api.EconomyAPI;
+import dev.zonary123.zutils.api.PartyAPI;
 import dev.zonary123.zutils.commands.ZUtilsCommand;
+import dev.zonary123.zutils.config.AdvancedRewardsTemplate;
 import dev.zonary123.zutils.config.Config;
 import dev.zonary123.zutils.config.Lang;
+import dev.zonary123.zutils.config.RewardsTemplate;
 import dev.zonary123.zutils.database.blocks.RegionBlockStorage;
 import dev.zonary123.zutils.ecs.*;
 import dev.zonary123.zutils.models.DurationValue;
@@ -52,6 +55,9 @@ public class ZUtils extends JavaPlugin {
   @Override
   protected void start() {
     EconomyAPI.registerEconomyProviders();
+    PartyAPI.registerPartyProviders();
+    AdvancedRewardsTemplate.register();
+    RewardsTemplate.register();
   }
 
   private void files() {

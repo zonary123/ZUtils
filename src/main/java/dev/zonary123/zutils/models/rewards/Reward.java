@@ -21,6 +21,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 @Data
 public class Reward {
+  private String id;
   private final String reward;
   private final double weight;
 
@@ -74,6 +75,25 @@ public class Reward {
    */
   public void giveItemReward(AdvancedRewards.DataPlayer data) {
     String[] parts = reward.split(":");
+    int length = parts.length;
+    if (length == 2) {
+      String itemId = parts[1];
+      ItemStack itemStack = new ItemStack(itemId, 1);
+      Player player = data.getPlayer();
+      if (player == null) {
+        giveDisconnectedReward(data.getPlayerRef().getUuid());
+        return;
+      }
+      player.getInventory().getCombinedEverything().addItemStack(itemStack);
+      NotificationUtil.sendNotification(
+        data.getPlayerRef().getPacketHandler(),
+        Message.translation(itemStack.getItem().getTranslationKey()),
+        null,
+        itemStack.toPacket(),
+        NotificationStyle.Default
+      );
+      return;
+    }
     String amountStr = parts[1];
     String itemId = parts[2];
     int amount;
@@ -94,10 +114,9 @@ public class Reward {
     player.getInventory().getCombinedEverything().addItemStack(itemStack);
     NotificationUtil.sendNotification(
       data.getPlayerRef().getPacketHandler(),
-      Message.empty(),
-      Message.empty(),
-      itemStack.toPacket(),
-      NotificationStyle.Default
+      Message.translation(itemStack.getItem().getTranslationKey()),
+      null,
+      itemStack.toPacket()
     );
   }
 
@@ -130,10 +149,23 @@ public class Reward {
    */
   private void giveMoneyReward(UUID playerUuid) {
     String[] parts = reward.split(":");
+
+    if (parts.length == 2) {
+      double amount = Double.parseDouble(parts[1]);
+      Economy economy = EconomyAPI.getEconomy("");
+      if (economy != null) {
+        economy.deposit(playerUuid, "", BigDecimal.valueOf(amount), "Reward");
+      }
+      return;
+    }
+
+    if (parts.length < 4) return;
+
     String economyId = parts[1];
     String currencyId = parts[2];
     String amountStr = parts[3];
     String reason = parts.length >= 5 ? parts[4] : "Reward";
+
     double amount;
     if (amountStr.contains("-")) {
       String[] range = amountStr.split("-");
@@ -143,11 +175,13 @@ public class Reward {
     } else {
       amount = Double.parseDouble(amountStr);
     }
+
     Economy economy = EconomyAPI.getEconomy(economyId);
     if (economy != null) {
       economy.deposit(playerUuid, currencyId, BigDecimal.valueOf(amount), reason);
     }
   }
+
 
 
   /* ------------------------------------------------------------ */

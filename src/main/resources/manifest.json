@@ -23,7 +23,8 @@
         "fof1092:EssentialsPlus": "*",
         "Economy:EconomySystem": "*",
         "Ecotale:Ecotale": "*",
-        "Zonary123:ZEconomy": "*"
+        "Zonary123:ZEconomy": "*",
+        "tsumori:partypro": "*"
     },
     "DisabledByDefault": false,
     "Main": "dev.zonary123.zutils.ZUtils",

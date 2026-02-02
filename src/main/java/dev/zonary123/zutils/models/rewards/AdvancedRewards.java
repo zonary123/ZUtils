@@ -37,7 +37,8 @@ public class AdvancedRewards {
   );
 
   private List<Reward> rewards = List.of(
-    new Reward("item:Soil_Dirt", 1.0),
+    new Reward("item:1:Soil_Dirt", 1.0),
+    new Reward("item:1-8:Soil_Grass", 2.0),
     new Reward("money:ZEconomy:coins:1:1 Coin rewards", 1.0),
     new Reward("command:give %player% Soil_Dirt 1", 1.0)
   );

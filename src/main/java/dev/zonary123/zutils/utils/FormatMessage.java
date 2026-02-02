@@ -31,8 +31,12 @@ public abstract class FormatMessage {
     Map.entry("f", "#FFFFFF")
   );
 
+  private static Boolean tinyMsgActive = null;
+
   public static Message formatMessage(String input) {
     if (input == null || input.isEmpty()) return Message.empty();
+
+    if (tinyMsgActive == null) tinyMsgActive = checkTinyMsgActive();
 
     StringBuilder builder = new StringBuilder(input.length());
     int length = input.length();
@@ -43,8 +47,13 @@ public abstract class FormatMessage {
       if ((c == '&' || c == '§') && i + 1 < length) {
         char code = Character.toLowerCase(input.charAt(i + 1));
         String hex = LEGACY_COLOR_MAP.get(String.valueOf(code));
+
         if (hex != null) {
-          builder.append("<#").append(hex.substring(1)).append(">");
+          if (tinyMsgActive) {
+            builder.append("<color:").append(hex).append(">");
+          } else {
+            builder.append("<#").append(hex.substring(1)).append(">");
+          }
           i++;
           continue;
         }
@@ -56,9 +65,18 @@ public abstract class FormatMessage {
     input = builder.toString();
 
     try {
-      return TinyMsg.parse(input);
+      return tinyMsgActive ? TinyMsg.parse(input) : parseLegacy(input);
     } catch (NoSuchMethodError | NoClassDefFoundError | Exception ignored) {
       return parseLegacy(input);
+    }
+  }
+
+  private static boolean checkTinyMsgActive() {
+    try {
+      TinyMsg.parse("ASDA");
+      return true;
+    } catch (NoSuchMethodError | NoClassDefFoundError | Exception ignored) {
+      return false;
     }
   }
 
