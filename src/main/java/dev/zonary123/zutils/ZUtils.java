@@ -41,7 +41,7 @@ public class ZUtils extends JavaPlugin {
   protected void setup() {
     try {
       super.setup();
-      files();
+      reload();
       events();
       RegionBlockStorage.init(getPath());
       this.getCommandRegistry().registerCommand(new ZUtilsCommand());
@@ -58,6 +58,10 @@ public class ZUtils extends JavaPlugin {
     PartyAPI.registerPartyProviders();
     AdvancedRewardsTemplate.register();
     RewardsTemplate.register();
+  }
+
+  public void reload() {
+    files();
   }
 
   private void files() {

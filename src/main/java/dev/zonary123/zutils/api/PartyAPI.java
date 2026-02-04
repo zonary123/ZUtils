@@ -19,7 +19,7 @@ public class PartyAPI {
       ZUtils.getLog().atInfo().log(
         "Registered party implementation: " + partyImpl.getClass().getName()
       );
-    } catch (NoClassDefFoundError | Exception e) {
+    } catch (NoClassDefFoundError | NoSuchMethodError | Exception e) {
       ZUtils.getLog().atWarning().withCause(e).log(
         "Failed to register party implementation: " + partyImpl.getClass().getName()
       );
