@@ -14,6 +14,7 @@ import dev.zonary123.zutils.config.RewardsTemplate;
 import dev.zonary123.zutils.database.blocks.RegionBlockStorage;
 import dev.zonary123.zutils.ecs.*;
 import dev.zonary123.zutils.models.DurationValue;
+import dev.zonary123.zutils.packets.PacketsRegistry;
 import dev.zonary123.zutils.utils.UtilsFile;
 import dev.zonary123.zutils.utils.async.AsyncContext;
 import dev.zonary123.zutils.utils.async.UtilsAsync;
@@ -51,6 +52,7 @@ public class ZUtils extends JavaPlugin {
       getLogger().atSevere().withCause(e).log("Error during ZUtils setup");
     }
   }
+  
 
   @Override
   protected void start() {
@@ -58,6 +60,7 @@ public class ZUtils extends JavaPlugin {
     PartyAPI.registerPartyProviders();
     AdvancedRewardsTemplate.register();
     RewardsTemplate.register();
+    PacketsRegistry.register();
   }
 
   public void reload() {

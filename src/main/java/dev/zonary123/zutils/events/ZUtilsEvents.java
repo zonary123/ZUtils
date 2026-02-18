@@ -18,4 +18,5 @@ public class ZUtilsEvents {
   public static final EventChannel<Command> COMMAND_EVENT = new EventChannel<>();
   public static final EventChannel<Travel> TRAVEL_EVENT = new EventChannel<>();
   public static final EventChannel<PlayerRef> TIME_PLAYER_EVENT = new EventChannel<>();
+  public static final EventChannel<InteractionNPC> INTERACTION_NPC_EVENT = new EventChannel<>();
 }
